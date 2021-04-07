@@ -1,9 +1,10 @@
 """
-General utilities
+Utilities for working with experiment dictionaries.
 """
 
 import os
 import hashlib
+from collections import defaultdict
 from itertools import product
 from functools import reduce
 
@@ -18,6 +19,20 @@ def as_list(x):
         return x
     except TypeError:
         return list(x)
+
+
+def get_nested_value(exp_dict, key):
+    """Access value in nested dictionary.
+    :param exp_dict: a (nested) dictionary.
+    :param key: a singleton or iterable of keys for the nested dictionary.
+    :returns: the value from the nested dictionary: `exp_dict[key[0]][key[1]...[key[-1]]`.
+    """
+    key = as_list(key)
+    value = exp_dict
+    for sub_key in key:
+        value = exp_dict[sub_key]
+
+    return value
 
 
 def expand_config(config, recurse=True):
@@ -77,15 +92,11 @@ def filter_dict_list(dict_list, keep=[], remove=[], filter_fn=None):
 
     def key_filter(exp_dict):
         for entry, to_keep in keys_to_check:
-            keys, values_to_check = entry
+            key, values_to_check = entry
             values_to_check = as_list(values_to_check)
-            keys = as_list(keys)
 
-            exp_value = exp_dict
-            for key in keys:
-                exp_value = exp_dict[key]
-
-            # keep the experiment
+            exp_value = get_nested_value(exp_dict, key)
+            # keep or filter the experiment
             return (exp_value in values_to_check and not to_keep) or (
                 exp_value not in values_to_check and to_keep
             )
@@ -99,6 +110,27 @@ def filter_dict_list(dict_list, keep=[], remove=[], filter_fn=None):
         final_filter = key_filter
 
     return list(filter(final_filter, dict_list))
+
+
+def make_grid(exp_list, row_key, col_key, line_key):
+    """Convert an experiment list of into grid of experiment dictionaries in preparation for plotting.
+    :param exp_list: list of experiment dictionaries. These should be expanded and filtered.
+    :param row_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different rows.
+    :param col_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different columns.
+    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different lines.
+    :returns: TODO
+
+    """
+    grid = defaultdict(lambda: defaultdict(dict))
+
+    for exp_dict in exp_list:
+        row_val = get_nested_value(exp_dict, row_key)
+        col_val = get_nested_value(exp_dict, col_key)
+        line_val = get_nested_value(exp_dict, line_key)
+
+        grid[row_val][col_val][line_val] = exp_dict
+
+    return grid
 
 
 def hash_dict(exp_dict):

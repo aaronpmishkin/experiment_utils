@@ -7,6 +7,8 @@ import pickle as pkl
 
 import torch
 
+from configs import hash_dict
+
 
 def load_experiment(exp_dict, base_dir="results", load_metrics=True, load_model=False):
     """Load results of the experiment corresponding to the given dictionary.
@@ -46,3 +48,14 @@ def load_experiment(exp_dict, base_dir="results", load_metrics=True, load_model=
             results["model"] = torch.load(torch_path)
 
     return results
+
+
+# TODO: finish this
+def load_grid(arg1):
+    """TODO: Docstring for load_grid.
+
+    :arg1: TODO
+    :returns: TODO
+
+    """
+    pass
