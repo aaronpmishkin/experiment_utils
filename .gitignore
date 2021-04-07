@@ -125,5 +125,13 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# Added
+
 # Pyre type checker
 .pyre/
+
+# MacOS
+.DS_Store
+
+# Vim
+tags
