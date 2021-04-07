@@ -5,7 +5,7 @@ Utilities for running experiments.
 import os
 import pickle as pkl
 
-from files import hash_dict
+from configs import hash_dict
 
 
 def run_or_load(exp_dict, run_fn, extract_fn=None, base_dir="results", force_rerun=False, save_return=True):

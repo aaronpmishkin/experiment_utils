@@ -1,35 +1,11 @@
 """
-    Utilities for working with files.
+Utilities for working with files.
 """
 
 import os
-import hashlib
 import pickle as pkl
 
 import torch
-
-
-def hash_dict(exp_dict):
-    """Hash an experiment dictionary into a unique id.
-    Can be used as a file-name. Adapted from Haven (https://github.com/haven-ai/haven-ai).
-    :param exp_dict: An experiment dictionary.
-    :returns: A unique id for the experiment
-    """
-    dict2hash = ""
-    if not isinstance(exp_dict, dict):
-        raise ValueError("exp_dict is not a dict")
-
-    for k in sorted(exp_dict.keys()):
-        if isinstance(exp_dict[k], dict):
-            v = hash_dict(exp_dict[k])
-        else:
-            v = exp_dict[k]
-
-        dict2hash += os.path.join(str(k), str(v))
-
-    hash_id = hashlib.md5(dict2hash.encode()).hexdigest()
-
-    return hash_id
 
 
 def load_experiment(exp_dict, base_dir="results", load_metrics=True, load_model=False):
