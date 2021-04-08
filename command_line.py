@@ -47,15 +47,15 @@ def add_default_arguments(parser=None):
     )
     # location to save results
     parser.add_argument(
-        "-D",
-        "--dest",
-        dest="dest_dir",
+        "-R",
+        "--results",
+        dest="results_dir",
         default="results",
         help="Destination directory for results.",
     )
     # location of source data
     parser.add_argument(
-        "-L",
+        "-D",
         "--data",
         default="data",
         dest="data_dir",
@@ -78,18 +78,11 @@ def get_default_arguments(parser=None):
     if len(extra) > 0:
         warn(f"Unknown command-line arguments {extra} encountered!")
 
-    return unpack_defaults(arguments), arguments, extra
+    return unpack_defaults(arguments), (arguments, extra)
 
 
 def unpack_defaults(arguments):
-    """TODO: Docstring for unpack_default_arguments.
-
-    :arg1: TODO
-    :returns: TODO
-
-    """
-
-    return arguments.exp_id, arguments.data_dir, arguments.dest_dir, arguments.force_rerun, arguments.save_results
+    return arguments.exp_id, arguments.data_dir, arguments.results_dir, arguments.force_rerun, arguments.save_results
 
 
 # convenience code for testing default command-line arguments.

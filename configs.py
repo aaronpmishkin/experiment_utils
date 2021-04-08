@@ -62,7 +62,7 @@ def expand_config(config, recurse=True):
     return exp_list
 
 
-def expand_dict_list(config_list):
+def expand_config_list(config_list):
     """Convenience function for expanding a list of experiment configurations.
     See `expand_config` for details on the expansion operation.
     :param config_list: list of configuration objects to expand.

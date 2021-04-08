@@ -11,10 +11,10 @@ import torch
 from configs import hash_dict
 
 
-def load_experiment(exp_dict, base_dir="results", load_metrics=True, load_model=False):
+def load_experiment(exp_dict, results_dir="results", load_metrics=True, load_model=False):
     """Load results of the experiment corresponding to the given dictionary.
     :param exp_dict: experiment dictionary.
-    :param base_dir: base directory for experimental results.
+    :param results_dir: base directory for experimental results.
     :param load_metrics: whether or not to load metrics from the experiment.
     :param load_model: whether or not to load a model associated with the experiment.
     :returns: A unique id for the experiment
@@ -26,11 +26,11 @@ def load_experiment(exp_dict, base_dir="results", load_metrics=True, load_model=
         )
 
     hash_id = hash_dict(exp_dict)
-    path = os.path.joint(base_dir, hash_id)
+    path = os.path.joint(results_dir, hash_id)
     results = {}
 
     if not os.path.exists(path):
-        raise ValueError(f"Cannot find experiment in {base_dir}!")
+        raise ValueError(f"Cannot find experiment in {results_dir}!")
 
     with open(os.path.join(path, "return_value.pkl"), "rb") as f:
         results["return_value"] = pkl.load(f)
@@ -51,10 +51,10 @@ def load_experiment(exp_dict, base_dir="results", load_metrics=True, load_model=
     return results
 
 
-def load_metric_grid(grid, base_dir="results", metric_fn=None):
+def load_metric_grid(grid, results_dir="results", metric_fn=None):
     """Load metrics according to a supplied grid of experiment dictionaries.
     :param grid: a grid of experiment dictionaries. See 'configs.make_grid'.
-    :param base_dir: base directory for experimental results.
+    :param results_dir: base directory for experimental results.
     :param metric_fn: (optional) function to process metrics after they are loaded.
     :returns: nested dictionary with the same "shape" as 'grid' containing the loaded metrics.
     """
@@ -67,7 +67,7 @@ def load_metric_grid(grid, base_dir="results", metric_fn=None):
     for row in grid.keys():
         for col in grid[row].keys():
             for line in grid[row][col].keys():
-                results = load_experiment(grid[row][col][line], base_dir, load_metrics=True, load_model=False)
+                results = load_experiment(grid[row][col][line], results_dir, load_metrics=True, load_model=False)
                 results_grid[row][col][line] = metric_fn(results["metrics"])
 
     return results_grid
