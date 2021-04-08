@@ -72,7 +72,7 @@ def expand_dict_list(config_list):
     def expand_plus(acc, value):
         return acc + expand_config(value)
 
-    return reduce(expand_plus, config_list, initial=[])
+    return reduce(expand_plus, config_list, [])
 
 
 def filter_dict_list(dict_list, keep=[], remove=[], filter_fn=None):
