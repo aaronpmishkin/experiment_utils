@@ -52,7 +52,7 @@ def load_experiment(exp_dict, base_dir="results", load_metrics=True, load_model=
 
 
 def load_metric_grid(grid, base_dir="results", metric_fn=None):
-    """Load metrics according to a supplied grid of experiment dictonaries.
+    """Load metrics according to a supplied grid of experiment dictionaries.
     :param grid: a grid of experiment dictionaries. See 'configs.make_grid'.
     :param base_dir: base directory for experimental results.
     :param metric_fn: (optional) function to process metrics after they are loaded.

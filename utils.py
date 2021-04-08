@@ -2,6 +2,7 @@
 Generic utilities.
 """
 from functools import reduce, partial
+from warnings import warn
 
 import numpy as np
 
@@ -42,7 +43,7 @@ def quantile_metrics(metrics, quantiles=(0.25, 0.75)):
 def std_dev_metrics(metrics, k=1):
     """Compute standard mean and deviation of supplied run metrics. Statistics are computed *across* columns.
     :metrics: a list, np.ndarray, or dictionary containing run metrics.
-    :param k: number of standard deviations for computer 'upper' and 'lower' error regions.
+    :param k: number of standard deviations for computer 'upper' and 'lower' error bounds.
     :returns: dictionary object with dict['center'] = mean, dict['upper'] = mean + std*k, dict['upper'] = mean - std*k.
     """
     metric_dict = {}
@@ -63,7 +64,7 @@ def std_dev_metrics(metrics, k=1):
     metric_dict['lower'] = mean - std * k
 
     if np.any(metrics['lower'] < 0):
-        RuntimeWarning("Negative values encountered during mean - std!")
+        warn("Negative values encountered when computing lower error bounds. Consider using ")
 
     return metric_dict
 
