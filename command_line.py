@@ -25,7 +25,7 @@ def add_default_arguments(parser=None):
         "--experiment",
         required=True,
         dest="exp_id",
-        help="Force re-run of the experiment.",
+        help="The ID of the experiment to run.",
     )
 
     # force re-run of experiment
