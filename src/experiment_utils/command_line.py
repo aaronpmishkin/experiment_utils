@@ -28,6 +28,13 @@ def add_default_arguments(parser=None):
         help="The ID of the experiment to run.",
     )
 
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        dest="debug",
+        help="The ID of the experiment to run.",
+    )
+
     # force re-run of experiment
     parser.add_argument(
         "-F",
@@ -90,7 +97,7 @@ def get_default_arguments(parser=None):
 
 
 def unpack_defaults(arguments):
-    return arguments.exp_id, arguments.data_dir, arguments.results_dir, arguments.force_rerun, arguments.save_results, arguments.verbose
+    return arguments.exp_id, arguments.data_dir, arguments.results_dir, arguments.force_rerun, arguments.save_results, arguments.verbose, arguments.debug
 
 
 # convenience code for testing default command-line arguments.
