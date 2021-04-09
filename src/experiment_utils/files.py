@@ -8,7 +8,7 @@ from copy import deepcopy
 
 import torch
 
-from configs import hash_dict
+from experiment_utils.configs import hash_dict
 
 
 def load_experiment(exp_dict, results_dir="results", load_metrics=True, load_model=False):

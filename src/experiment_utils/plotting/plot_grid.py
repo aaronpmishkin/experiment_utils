@@ -8,7 +8,7 @@ import itertools
 
 import matplotlib.pyplot as plt
 
-from defaults import DEFAULT_SETTINGS
+from experiment_utils.plotting.defaults import DEFAULT_SETTINGS
 
 
 def try_cell_row_col(value_dict, row, col, default_value=None):
