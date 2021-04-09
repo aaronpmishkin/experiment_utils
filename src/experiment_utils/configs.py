@@ -8,17 +8,7 @@ from collections import defaultdict
 from itertools import product
 from functools import reduce
 
-
-def as_list(x):
-    """Wrap argument into a list if it is not iterable.
-    :param x: a (potential) singleton to wrap in a list.
-    :returns: [x] if x is not iterable and x if it is.
-    """
-    try:
-        _ = iter(x)
-        return x
-    except TypeError:
-        return list(x)
+from experiment_utils.utils import as_list
 
 
 def get_nested_value(exp_dict, key):

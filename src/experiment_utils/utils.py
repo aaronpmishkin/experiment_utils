@@ -8,6 +8,18 @@ import logging
 import numpy as np
 
 
+def as_list(x):
+    """Wrap argument into a list if it is not iterable.
+    :param x: a (potential) singleton to wrap in a list.
+    :returns: [x] if x is not iterable and x if it is.
+    """
+    try:
+        _ = iter(x)
+        return x
+    except TypeError:
+        return [x]
+
+
 def quantile_metrics(metrics, quantiles=(0.25, 0.75)):
     """Compute quantiles and median of supplied run metrics. Statistics are computed *across* columns.
     :metrics: a list, np.ndarray, or dictionary containing run metrics.
