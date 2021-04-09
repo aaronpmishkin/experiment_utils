@@ -11,7 +11,7 @@ import torch
 from experiment_utils.configs import hash_dict
 
 
-def load_experiment(exp_dict, results_dir="results", load_metrics=True, load_model=False):
+def load_experiment(exp_dict, results_dir="results", load_metrics=False, load_model=False):
     """Load results of the experiment corresponding to the given dictionary.
     :param exp_dict: experiment dictionary.
     :param results_dir: base directory for experimental results.
@@ -20,13 +20,8 @@ def load_experiment(exp_dict, results_dir="results", load_metrics=True, load_mod
     :returns: A unique id for the experiment
     """
 
-    if not load_metrics and not load_model:
-        raise ValueError(
-            "At least one of 'load_metrics' and 'load_model' should be 'True'"
-        )
-
     hash_id = hash_dict(exp_dict)
-    path = os.path.joint(results_dir, hash_id)
+    path = os.path.join(results_dir, hash_id)
     results = {}
 
     if not os.path.exists(path):

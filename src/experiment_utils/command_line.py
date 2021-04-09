@@ -61,6 +61,14 @@ def add_default_arguments(parser=None):
         dest="data_dir",
         help="Source directory for data files.",
     )
+    # location of source data
+    parser.add_argument(
+        "-V",
+        "--verbose",
+        action="store_true",
+        dest="verbose",
+        help="Print logging information verbosely.",
+    )
 
     return parser
 
@@ -82,7 +90,7 @@ def get_default_arguments(parser=None):
 
 
 def unpack_defaults(arguments):
-    return arguments.exp_id, arguments.data_dir, arguments.results_dir, arguments.force_rerun, arguments.save_results
+    return arguments.exp_id, arguments.data_dir, arguments.results_dir, arguments.force_rerun, arguments.save_results, arguments.verbose
 
 
 # convenience code for testing default command-line arguments.

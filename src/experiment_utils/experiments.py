@@ -20,14 +20,14 @@ def run_or_load(logger, exp_dict, run_fn, data_dir="data", results_dir="results"
     :returns: the output of running the experiment, which is 'run_fn(logger, exp_dict)'.
     """
 
-    path = os.path.join(hash_dict(results_dir, exp_dict))
+    path = os.path.join(results_dir, hash_dict(exp_dict), "return_value.pkl")
 
     if os.path.exists(path) and not force_rerun:
         logger.info("Loading results.")
         with open(path, "rb") as f:
             results = pkl.load(f)
     else:
-        logger.info("Running...")
+        logger.info("Running.")
         results = run_fn(logger, exp_dict, data_dir)
 
         logger.info("Complete.")
@@ -36,8 +36,9 @@ def run_or_load(logger, exp_dict, run_fn, data_dir="data", results_dir="results"
             logger.info("Saving results.")
 
             # make sure save path exists
-            os.makedirs(path, exist_ok=True)
-            with open(os.path.join(path, "return_value.pkl"), "wb") as f:
+            head, _ = os.path.split(path)
+            os.makedirs(head, exist_ok=True)
+            with open(path, "wb") as f:
                 pkl.dump(results, f)
 
     return results

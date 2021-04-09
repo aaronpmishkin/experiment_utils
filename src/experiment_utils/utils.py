@@ -3,6 +3,7 @@ Generic utilities.
 """
 from functools import reduce, partial
 from warnings import warn
+import logging
 
 import numpy as np
 
@@ -88,3 +89,21 @@ def pad(array, length):
 
     array_np = np.array(array)
     return np.concatenate([array_np, np.repeat([array_np[-1]], length - len(array_np))])
+
+
+# Logging #
+
+def get_logger(name, verbose=False):
+    """Construct a logging.Logger instance with an appropriate configuration.
+    :param name: name for the Logger instance.
+    :param verbose: (optional) whether or not the logger should print verbosely (ie. at the INFO level).
+        Defaults to False.
+    :returns: instance of logging.Logger.
+    """
+
+    level = logging.WARNING
+    if verbose:
+        level = logging.INFO
+
+    logging.basicConfig(level=level)
+    return logging.getLogger(name)
