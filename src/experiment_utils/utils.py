@@ -105,17 +105,22 @@ def pad(array, length):
 
 # Logging #
 
-def get_logger(name, verbose=False):
+def get_logger(name, verbose=False, debug=False, log_file=None):
     """Construct a logging.Logger instance with an appropriate configuration.
     :param name: name for the Logger instance.
     :param verbose: (optional) whether or not the logger should print verbosely (ie. at the INFO level).
         Defaults to False.
+    :param debug: (optional) whether or not the logger should print in debug mode (ie. at the DEBUG level).
+        Defaults to False.
+    :param log_file: (optional) path to a file where the log should be stored. The log is printed to stdout when 'None'.
     :returns: instance of logging.Logger.
     """
 
     level = logging.WARNING
-    if verbose:
+    if debug:
+        level = logging.DEBUG
+    elif verbose:
         level = logging.INFO
 
-    logging.basicConfig(level=level)
+    logging.basicConfig(level=level, filename=log_file)
     return logging.getLogger(name)
