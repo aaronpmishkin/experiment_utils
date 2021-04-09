@@ -48,9 +48,9 @@ def expand_config(config, recurse=True):
     exp_config_copy = config.copy()
 
     for key, value in exp_config_copy.items():
-        if type(value, dict) and recurse:
+        if isinstance(value, dict) and recurse:
             exp_config_copy[key] = expand_config(value)
-        if not type(exp_config_copy[key], list):
+        if not isinstance(exp_config_copy[key], list):
             exp_config_copy[key] = [exp_config_copy[key]]
 
     # Create the cartesian product

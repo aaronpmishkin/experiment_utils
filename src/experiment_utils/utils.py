@@ -16,18 +16,18 @@ def quantile_metrics(metrics, quantiles=(0.25, 0.75)):
     metric_dict = {}
     assert quantiles[1] > quantiles[0]
 
-    if type(metrics, dict):
+    if isinstance(metrics, dict):
         q_0_key = f"{quantiles[0]}_quantile"
         q_1_key = f"{quantiles[1]}_quantile"
 
         if q_0_key not in metrics or q_0_key not in metrics or "median" not in metrics:
             raise ValueError("If 'metrics' is a dictionary then it must contain pre-computed statistics, including median and desired quantiles.")
         q_0, q_1, median = metrics[q_0_key], metrics[q_1_key], metrics["median"]
-    elif type(metrics, list):
+    elif isinstance(metrics, list):
         metrics_np = equalize_arrays(metrics)
         q_0, q_1 = np.quantile(metrics_np, quantiles[0], axis=0), np.quantile(metrics_np, quantiles[1], axis=0)
         median = np.median(metrics_np, axis=0)
-    elif type(metrics, np.ndarray):
+    elif isinstance(metrics, np.ndarray):
         q_0, q_1 = np.quantile(metrics_np, quantiles[0], axis=0), np.quantile(metrics_np, quantiles[1], axis=0)
         median = np.median(metrics_np, axis=0)
     else:
@@ -47,14 +47,14 @@ def std_dev_metrics(metrics, k=1):
     :returns: dictionary object with dict['center'] = mean, dict['upper'] = mean + std*k, dict['upper'] = mean - std*k.
     """
     metric_dict = {}
-    if type(metrics, dict):
+    if isinstance(metrics, dict):
         if "std" not in metrics or "mean" not in metrics:
             raise ValueError("If 'metrics' is a dictionary then it must contain pre-computed statistics, including mean and standard deviation.")
         std, mean = metrics["std"], metrics["mean"]
-    elif type(metrics, list):
+    elif isinstance(metrics, list):
         metrics_np = equalize_arrays(metrics)
         std, mean = np.std(metrics_np, axis=0), np.mean(metrics_np, axis=0)
-    elif type(metrics, np.ndarray):
+    elif isinstance(metrics, np.ndarray):
         std, mean = np.std(metrics_np, axis=0), np.mean(metrics_np, axis=0)
     else:
         raise ValueError(f"Cannot interpret metrics of type {type(metrics)}!")

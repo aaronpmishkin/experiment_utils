@@ -11,7 +11,7 @@ def add_default_arguments(parser=None):
     :param parser: (optional) argparse.ArgumentParser to which the default arguments should be added.
     :returns: ArgumentParser with default arguments added.
     """
-    assert (parser is None or type(parser, ArgumentParser))
+    assert (parser is None or isinstance(parser, ArgumentParser))
 
     # create argument parser.
     if parser is None:
@@ -70,7 +70,7 @@ def get_default_arguments(parser=None):
     :param parser: (Optional) an ArgumentParser instance to which the default arguments should be added.
     :returns: default arguments unpacked into a tuple, the parser, the arguments object, and an extra, unparsed arguments.
     """
-    assert (parser is None or type(parser, ArgumentParser))
+    assert (parser is None or isinstance(parser, ArgumentParser))
 
     parser = add_default_arguments(parser)
     arguments, extra = parser.parse_known_args()
