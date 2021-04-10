@@ -7,6 +7,7 @@ import hashlib
 from collections import defaultdict
 from itertools import product
 from functools import reduce
+from copy import deepcopy
 
 from experiment_utils.utils import as_list
 
@@ -20,7 +21,7 @@ def get_nested_value(exp_dict, key):
     key = as_list(key)
     value = exp_dict
     for sub_key in key:
-        value = exp_dict[sub_key]
+        value = value[sub_key]
 
     return value
 
@@ -121,6 +122,16 @@ def make_grid(exp_list, row_key, col_key, line_key):
         grid[row_val][col_val][line_val] = exp_dict
 
     return grid
+
+
+def call_on_grid(exp_grid, call_fn):
+    new_grid = deepcopy(exp_grid)
+    for row in exp_grid.keys():
+        for col in exp_grid[row].keys():
+            for line in exp_grid[row][col].keys():
+                new_grid[row][col][line] = call_fn(exp_grid[row][col][line])
+
+    return new_grid
 
 
 def hash_dict(exp_dict):

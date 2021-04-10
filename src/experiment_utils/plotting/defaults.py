@@ -9,9 +9,9 @@ DEFAULT_SETTINGS = {
     "fig_height": 6,            # height of each sub-figure
     # fonts:
     'titles_fs': 32,            # font-size for plot title.
+    "subtitle_fs": 30,          # font-size for sub-titles (e.g. column titles)f
     "axis_labels_fs": 24,       # font-size for axis labels
     "legend_fs": 22,            # font-size for text in the legend.
-    "subtitle_fs": 30,          # font-size for sub-titles (e.g. column titles)f
     "tick_fs": 14,              # font-size for ticks.
     "offest_text_fs": 12,       # font-size for y-offset. (printed at top of y-axis when using scientific notation)
     "row_title_pad": 5,         # padding for row-titles. May need to be tweaked for big row titles.
@@ -32,10 +32,10 @@ DEFAULT_SETTINGS = {
     # titles and labels
     "col_titles": True,         # Whether or not to title the columns: True OR False
     "row_titles": True,         # Whether or not to title the rows: True OR False
-    "y_labels": False,          # "every_col",   # Where to put y-axis labels: "left_col" OR "every_col" OR False/None
+    "y_labels": "left_col",     # "every_col",   # Where to put y-axis labels: "left_col" OR "every_col" OR False/None
     "x_labels": "bottom_row",   # Where to put x-axis labels: "bottom_col" OR "every_row" OR False/None
     "legend_cols": 4,           # number of columns for the legend
-    'ticklabel_format': 'plain', 
+    'ticklabel_format': 'plain',
 }
 
 # default colors for lines.

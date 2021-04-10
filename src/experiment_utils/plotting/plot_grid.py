@@ -35,7 +35,7 @@ def plot_grid(plot_fn, results, figure_labels, line_kwargs, limits={}, ticks={},
         the same for each row, but the number of lines may differ for each cell.
     :param figure_labels: dict of dicts containing labels for the plots. The top-level dict should contain keys
         'y_labels', 'x_labels', 'col_titles', 'row_titles'. Each sub-dict can be indexed by cell, row, or column.
-    :param line_kwargs: dict of key-word arguments for each key in 'lines'. See 'make_line_kwargs'.
+    :param line_kwargs: dict of key-word arguments for each key in 'lines'.
     :param limits: dict of tuples (x_lim, y_lim), where x_lim are the desired limits for the x-axis and
         y_lim are the desired limits for the y-axis. Can be indexed by cell, row, or column.
     :param ticks: dict of tuples (x_ticks, y_ticks), where x_ticks are the desiredd ticks for the x-axis
@@ -55,7 +55,7 @@ def plot_grid(plot_fn, results, figure_labels, line_kwargs, limits={}, ticks={},
 
     # title the plot if a title is given.
     if 'title' in figure_labels:
-        fig.suptitle(figure_labels['title'], fontsize=settings.get('titles_fs', 18), y=0.925)
+        fig.suptitle(figure_labels['title'], fontsize=settings.get('titles_fs', 18), y=1)
 
     # unpack label arguments:
     y_labels, x_labels, col_titles, row_titles = figure_labels.get("y_labels", {}), figure_labels.get("x_labels", {}), figure_labels.get("col_titles", {}), figure_labels.get("row_titles", {})
@@ -65,12 +65,11 @@ def plot_grid(plot_fn, results, figure_labels, line_kwargs, limits={}, ticks={},
         ax = fig.add_subplot(spec[math.floor(i / len(cols)), i % len(cols)])
         # dict of axes objects
         axes[(row, col)] = ax
-        marker_freq = None
         ax.yaxis.offsetText.set_fontsize(settings['offest_text_fs'])
 
         # in the top row
         if settings.get("col_titles", False) and i < len(cols):
-            ax.title(col_titles.get(col, ""), fontsize=settings["subtitle_fs"])
+            ax.set_title(col_titles.get(col, ""), fontsize=settings["subtitle_fs"])
 
         if settings.get("row_titles", False) and i % len(cols) == 0:
             ax.annotate(row_titles.get(row, ""), xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - settings["row_title_pad"], 0),
@@ -79,19 +78,19 @@ def plot_grid(plot_fn, results, figure_labels, line_kwargs, limits={}, ticks={},
 
         # start of a new row
         if settings.get("y_labels", False) == "left_col" and i % len(cols) == 0:
-            ax.ylabel(y_labels.get(row, ""), fontsize=settings["axis_labels_fs"])
+            ax.set_ylabel(y_labels.get(row, ""), fontsize=settings["axis_labels_fs"])
         elif settings.get("y_labels", False) == "every_col":
-            ax.ylabel(try_cell_row_col(y_labels, row, col, ""), fontsize=settings["axis_labels_fs"])
+            ax.set_ylabel(try_cell_row_col(y_labels, row, col, ""), fontsize=settings["axis_labels_fs"])
 
         # in the bottom row
         if settings.get("x_labels", False) == "bottom_row" and len(cols) * (len(rows) - 1) <= i:
-            ax.xlabel(x_labels.get(col, ""), fontsize=settings["axis_labels_fs"])
+            ax.set_xlabel(x_labels.get(col, ""), fontsize=settings["axis_labels_fs"])
         elif settings.get("x_labels", False) == "every_row":
-            ax.xlabel(try_cell_row_col(x_labels, row, col, ""), fontsize=settings["axis_labels_fs"])
+            ax.set_xlabel(try_cell_row_col(x_labels, row, col, ""), fontsize=settings["axis_labels_fs"])
 
         ax.ticklabel_format(axis='y',
-                             style=settings.get('ticklabel_format', 'scientific'),
-                             scilimits=(0, 0))
+                            style=settings.get('ticklabel_format', 'scientific'),
+                            scilimits=(0, 0))
 
         # ticks
         ax.tick_params(labelsize=settings['tick_fs'])
@@ -108,11 +107,9 @@ def plot_grid(plot_fn, results, figure_labels, line_kwargs, limits={}, ticks={},
         # limits
         if try_cell_row_col(limits, row, col, None) is not None:
             x_limits, y_limits = try_cell_row_col(limits, row, col, None)
-            if x_limits is not None and len(x_limits) > 0 and "num_markers" in settings:
-                marker_freq = math.floor((x_limits[1] - x_limits[0]) / settings['num_markers'])
 
         # plot the cell
-        plot_fn(ax, results[row][col], line_kwargs, settings, marker_freq)
+        plot_fn(ax, results[row][col], line_kwargs, settings)
 
         # limits: needs to be done after plotting the data
         if try_cell_row_col(limits, row, col, None) is not None:
@@ -144,7 +141,7 @@ def plot_grid(plot_fn, results, figure_labels, line_kwargs, limits={}, ticks={},
                         bottom=bottom_margin)
 
     if base_dir is not None:
-        head, _ = os.path.dirname(base_dir)
+        head, _ = os.path.split(base_dir)
         os.makedirs(head, exist_ok=True)
         plt.savefig(base_dir, bbox_inches='tight')
 

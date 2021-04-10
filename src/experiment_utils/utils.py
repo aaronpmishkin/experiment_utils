@@ -13,6 +13,10 @@ def as_list(x):
     :param x: a (potential) singleton to wrap in a list.
     :returns: [x] if x is not iterable and x if it is.
     """
+    # don't treat strings as iterables.
+    if isinstance(x, str):
+        return [x]
+
     try:
         _ = iter(x)
         return x
