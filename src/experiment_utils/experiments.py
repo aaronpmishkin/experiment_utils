@@ -4,12 +4,22 @@ Utilities for running experiments.
 
 import os
 import pickle as pkl
+from logging import Logger
+from typing import Callable
 
 from experiment_utils.configs import hash_dict
 
 
-def run_or_load(logger, exp_dict, run_fn, data_dir="data", results_dir="results", force_rerun=False, save_return=True):
-    """ Run and experiment or load the results if they already exist.
+def run_or_load(
+    logger: Logger,
+    exp_dict: dict,
+    run_fn: Callable,
+    data_dir: str = "data",
+    results_dir: str = "results",
+    force_rerun: bool = False,
+    save_return: bool = True,
+):
+    """Run and experiment or load the results if they already exist.
     :param logger: an instance of logging.Logger for use logging the experiment run.
     :param exp_dict: dictionary with experiment parameters.
     :param run_fn: callable that executes the desired experiment.

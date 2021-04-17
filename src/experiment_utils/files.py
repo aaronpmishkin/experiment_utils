@@ -5,19 +5,25 @@ Utilities for working with files.
 import os
 import pickle as pkl
 from copy import deepcopy
+from typing import Dict, Any, Callable
 
 import torch
 
 from experiment_utils.configs import hash_dict
 
 
-def load_experiment(exp_dict, results_dir="results", load_metrics=False, load_model=False):
+def load_experiment(
+    exp_dict: dict,
+    results_dir: str = "results",
+    load_metrics: bool = False,
+    load_model: bool = False,
+) -> Dict[str, Any]:
     """Load results of the experiment corresponding to the given dictionary.
     :param exp_dict: experiment dictionary.
     :param results_dir: base directory for experimental results.
     :param load_metrics: whether or not to load metrics from the experiment.
     :param load_model: whether or not to load a model associated with the experiment.
-    :returns: A unique id for the experiment
+    :returns: dict containing results. It is indexed by 'return_value' and (optionally) 'metrics', 'model'.
     """
 
     hash_id = hash_dict(exp_dict)
@@ -46,7 +52,9 @@ def load_experiment(exp_dict, results_dir="results", load_metrics=False, load_mo
     return results
 
 
-def load_metric_grid(grid, results_dir="results", metric_fn=None):
+def load_metric_grid(
+    grid: dict, results_dir: str = "results", metric_fn: Callable = None
+) -> dict:
     """Load metrics according to a supplied grid of experiment dictionaries.
     :param grid: a grid of experiment dictionaries. See 'configs.make_grid'.
     :param results_dir: base directory for experimental results.
@@ -56,13 +64,19 @@ def load_metric_grid(grid, results_dir="results", metric_fn=None):
 
     results_grid = deepcopy(grid)
     if metric_fn is None:
+
         def metric_fn(x):
             return x
 
     for row in grid.keys():
         for col in grid[row].keys():
             for line in grid[row][col].keys():
-                results = load_experiment(grid[row][col][line], results_dir, load_metrics=True, load_model=False)
+                results = load_experiment(
+                    grid[row][col][line],
+                    results_dir,
+                    load_metrics=True,
+                    load_model=False,
+                )
                 results_grid[row][col][line] = metric_fn(results["metrics"])
 
     return results_grid

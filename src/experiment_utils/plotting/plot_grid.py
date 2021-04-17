@@ -5,14 +5,17 @@ Utility for generating grids of plots.
 import os
 import math
 import itertools
+from typing import Any, Callable, Optional
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 
 from experiment_utils.plotting.defaults import DEFAULT_SETTINGS
 
 
-def try_cell_row_col(value_dict, row, col, default_value=None):
-    """ Helper for finding the dictionary value associated with a cell in the plot.
+def try_cell_row_col(
+    value_dict: dict, row: Any, col: Any, default_value: Optional[bool] = None
+) -> Any:
+    """Helper for finding the dictionary value associated with a cell in the plot.
     The dictionary is first index by cell using `(row, col)`, then by row using `row`,
     and finally by column using `col`. `default_value` is returned if nothing is found.
     :param value_dict: dictionary to index into. e.g y-axis labels for each cell.
@@ -21,14 +24,22 @@ def try_cell_row_col(value_dict, row, col, default_value=None):
     :param default_value: value to return if nothing is found. Optional. Defaults to `None`.
     :returns: value_dict[(row, col)], value_dict[row], value_dict[col] or `default_value`.
     """
-    return value_dict.get((row, col),
-                          value_dict.get(row,
-                                         value_dict.get(col,
-                                                        default_value)))
+    return value_dict.get(
+        (row, col), value_dict.get(row, value_dict.get(col, default_value))
+    )
 
 
-def plot_grid(plot_fn, results, figure_labels, line_kwargs, limits={}, ticks={}, settings=DEFAULT_SETTINGS, base_dir=None):
-    """ Helper function for generating a len(rows) x len(cols) grid of plots. In the following, cell refers to a (row, col) key-pair.
+def plot_grid(
+    plot_fn: Callable,
+    results: dict,
+    figure_labels: dict,
+    line_kwargs: dict,
+    limits: dict = {},
+    ticks: dict = {},
+    settings: dict = DEFAULT_SETTINGS,
+    base_dir: Optional[str] = None,
+):
+    """Helper function for generating a len(rows) x len(cols) grid of plots. In the following, cell refers to a (row, col) key-pair.
     :param plot_fn: function for plotting each cell in the grid.
     :param results: nested dictionary of results. The first level of is defines the rows of the plot,
         the second the columns and the third  the lines in each cell. Note that the number of columns must be
@@ -47,53 +58,80 @@ def plot_grid(plot_fn, results, figure_labels, line_kwargs, limits={}, ticks={},
     rows = list(results.keys())
     cols = list(results[rows[0]].keys())
 
-    fig = plt.figure(figsize=(settings['fig_width'] * len(cols),
-                              len(rows) * settings['fig_height']))
+    fig = plt.figure(
+        figsize=(settings["fig_width"] * len(cols), len(rows) * settings["fig_height"])
+    )
 
     # grid spec.
     spec = fig.add_gridspec(ncols=len(cols), nrows=len(rows))
 
     # title the plot if a title is given.
-    if 'title' in figure_labels:
-        fig.suptitle(figure_labels['title'], fontsize=settings.get('titles_fs', 18), y=1)
+    if "title" in figure_labels:
+        fig.suptitle(
+            figure_labels["title"], fontsize=settings.get("titles_fs", 18), y=1
+        )
 
     # unpack label arguments:
-    y_labels, x_labels, col_titles, row_titles = figure_labels.get("y_labels", {}), figure_labels.get("x_labels", {}), figure_labels.get("col_titles", {}), figure_labels.get("row_titles", {})
+    y_labels, x_labels, col_titles, row_titles = (
+        figure_labels.get("y_labels", {}),
+        figure_labels.get("x_labels", {}),
+        figure_labels.get("col_titles", {}),
+        figure_labels.get("row_titles", {}),
+    )
     axes = {}
 
     for i, (row, col) in enumerate(itertools.product(rows, cols)):
         ax = fig.add_subplot(spec[math.floor(i / len(cols)), i % len(cols)])
         # dict of axes objects
         axes[(row, col)] = ax
-        ax.yaxis.offsetText.set_fontsize(settings['offest_text_fs'])
+        ax.yaxis.offsetText.set_fontsize(settings["offest_text_fs"])
 
         # in the top row
         if settings.get("col_titles", False) and i < len(cols):
             ax.set_title(col_titles.get(col, ""), fontsize=settings["subtitle_fs"])
 
         if settings.get("row_titles", False) and i % len(cols) == 0:
-            ax.annotate(row_titles.get(row, ""), xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - settings["row_title_pad"], 0),
-                        xycoords=ax.yaxis.label, textcoords='offset points',
-                        fontsize=settings["subtitle_fs"], ha='right', va='center', rotation=90)
+            ax.annotate(
+                row_titles.get(row, ""),
+                xy=(0, 0.5),
+                xytext=(-ax.yaxis.labelpad - settings["row_title_pad"], 0),
+                xycoords=ax.yaxis.label,
+                textcoords="offset points",
+                fontsize=settings["subtitle_fs"],
+                ha="right",
+                va="center",
+                rotation=90,
+            )
 
         # start of a new row
         if settings.get("y_labels", False) == "left_col" and i % len(cols) == 0:
             ax.set_ylabel(y_labels.get(row, ""), fontsize=settings["axis_labels_fs"])
         elif settings.get("y_labels", False) == "every_col":
-            ax.set_ylabel(try_cell_row_col(y_labels, row, col, ""), fontsize=settings["axis_labels_fs"])
+            ax.set_ylabel(
+                try_cell_row_col(y_labels, row, col, ""),
+                fontsize=settings["axis_labels_fs"],
+            )
 
         # in the bottom row
-        if settings.get("x_labels", False) == "bottom_row" and len(cols) * (len(rows) - 1) <= i:
+        if (
+            settings.get("x_labels", False) == "bottom_row"
+            and len(cols) * (len(rows) - 1) <= i
+        ):
             ax.set_xlabel(x_labels.get(col, ""), fontsize=settings["axis_labels_fs"])
         elif settings.get("x_labels", False) == "every_row":
-            ax.set_xlabel(try_cell_row_col(x_labels, row, col, ""), fontsize=settings["axis_labels_fs"])
+            ax.set_xlabel(
+                try_cell_row_col(x_labels, row, col, ""),
+                fontsize=settings["axis_labels_fs"],
+            )
 
-        ax.ticklabel_format(axis='y',
-                            style=settings.get('ticklabel_format', 'scientific'),
-                            scilimits=(0, 0))
+        ax.ticklabel_format(
+            axis="y",
+            style=settings.get("ticklabel_format", "scientific"),
+            scilimits=(0, 0),
+        )
 
         # ticks
-        ax.tick_params(labelsize=settings['tick_fs'])
+        ax.tick_params(labelsize=settings["tick_fs"])
         if try_cell_row_col(ticks, row, col, None) is not None:
 
             x_ticks, y_ticks = try_cell_row_col(ticks, row, col, None)
@@ -129,20 +167,30 @@ def plot_grid(plot_fn, results, figure_labels, line_kwargs, limits={}, ticks={},
         final_handles.append(handles[i])
         final_labels.append(labels[i])
 
-    ncol = settings['legend_cols']
+    ncol = settings["legend_cols"]
 
-    fig.legend(final_handles, final_labels, loc='lower center', borderaxespad=0.1,
-               fancybox=False, shadow=False, ncol=ncol, fontsize=settings["legend_fs"])
+    fig.legend(
+        final_handles,
+        final_labels,
+        loc="lower center",
+        borderaxespad=0.1,
+        fancybox=False,
+        shadow=False,
+        ncol=ncol,
+        fontsize=settings["legend_fs"],
+    )
 
-    bottom_margin = (settings['bottom_margin'] / len(rows))
+    bottom_margin = settings["bottom_margin"] / len(rows)
 
-    fig.subplots_adjust(wspace=settings.get("wspace", 0.2),
-                        hspace=settings.get("vspace", 0.2),
-                        bottom=bottom_margin)
+    fig.subplots_adjust(
+        wspace=settings.get("wspace", 0.2),
+        hspace=settings.get("vspace", 0.2),
+        bottom=bottom_margin,
+    )
 
     if base_dir is not None:
         head, _ = os.path.split(base_dir)
         os.makedirs(head, exist_ok=True)
-        plt.savefig(base_dir, bbox_inches='tight')
+        plt.savefig(base_dir, bbox_inches="tight")
 
     return fig, axes

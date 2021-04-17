@@ -55,6 +55,6 @@ line_colors = ["#000000",
                "#191970"]
 
 # default line-style is solid.
-line_styles = ['-', '-.', '--',]
+line_styles = ['-', '-.', '--', ]
 # default marker styles.
 marker_styles = ['o', 's', 'v', 'x', 'D', '^', 'D', 'p', 'o', 'x', 's']

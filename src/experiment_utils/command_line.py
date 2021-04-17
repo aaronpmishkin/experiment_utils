@@ -2,16 +2,17 @@
 Command line helpers.
 """
 
-from argparse import ArgumentParser
+from typing import Tuple, List, Optional
+from argparse import ArgumentParser, Namespace
 from warnings import warn
 
 
-def add_default_arguments(parser=None):
+def add_default_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     """Add default command line arguments for an experiment. By default, a new ArgmentParser is constructed and returned.
-    :param parser: (optional) argparse.ArgumentParser to which the default arguments should be added.
-    :returns: ArgumentParser with default arguments added.
+    :param parser: (optional) parser to which the default arguments should be added.
+    :returns: parser with default arguments added.
     """
-    assert (parser is None or isinstance(parser, ArgumentParser))
+    assert parser is None or isinstance(parser, ArgumentParser)
 
     # create argument parser.
     if parser is None:
@@ -88,16 +89,19 @@ def add_default_arguments(parser=None):
     return parser
 
 
-def get_default_arguments(parser=None):
+def get_default_arguments(
+    parser: Optional[ArgumentParser] = None,
+) -> Tuple[Tuple[str, str, str, bool, bool, bool, bool, str], Tuple[Namespace, List]]:
     """Create and parse default experiment arguments from the command line. Default behavior is to create a new ArgumentParser object.
     :param parser: (Optional) an ArgumentParser instance to which the default arguments should be added.
     :returns: default arguments unpacked into a tuple, the parser, the arguments object, and an extra, unparsed arguments.
     """
-    assert (parser is None or isinstance(parser, ArgumentParser))
+    assert parser is None or isinstance(parser, ArgumentParser)
 
     # this will create the argument parser if necessary.
     parser = add_default_arguments(parser)
     arguments, extra = parser.parse_known_args()
+    print(type(arguments), type(extra))
 
     if len(extra) > 0:
         warn(f"Unknown command-line arguments {extra} encountered!")
@@ -105,8 +109,19 @@ def get_default_arguments(parser=None):
     return unpack_defaults(arguments), (arguments, extra)
 
 
-def unpack_defaults(arguments):
-    return arguments.exp_id, arguments.data_dir, arguments.results_dir, arguments.force_rerun, arguments.save_results, arguments.verbose, arguments.debug, arguments.log_file
+def unpack_defaults(
+    arguments: Namespace,
+) -> Tuple[str, str, str, bool, bool, bool, bool, str]:
+    return (
+        arguments.exp_id,
+        arguments.data_dir,
+        arguments.results_dir,
+        arguments.force_rerun,
+        arguments.save_results,
+        arguments.verbose,
+        arguments.debug,
+        arguments.log_file,
+    )
 
 
 # convenience code for testing default command-line arguments.

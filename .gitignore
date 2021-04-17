@@ -132,6 +132,7 @@ dmypy.json
 
 # MacOS
 .DS_Store
+playground
 
 # Vim
 tags
