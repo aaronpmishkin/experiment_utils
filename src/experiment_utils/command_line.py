@@ -101,7 +101,6 @@ def get_default_arguments(
     # this will create the argument parser if necessary.
     parser = add_default_arguments(parser)
     arguments, extra = parser.parse_known_args()
-    print(type(arguments), type(extra))
 
     if len(extra) > 0:
         warn(f"Unknown command-line arguments {extra} encountered!")
