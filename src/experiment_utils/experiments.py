@@ -5,15 +5,16 @@ Utilities for running experiments.
 import os
 import pickle as pkl
 from logging import Logger
-from typing import Callable
+from typing import Callable, Dict, Any, Tuple
 
 from experiment_utils.configs import hash_dict
+from experiment_utils.files import save_experiment
 
 
 def run_or_load(
     logger: Logger,
     exp_dict: dict,
-    run_fn: Callable,
+    run_fn: Callable[[Logger, Dict[str, Any], str], Tuple[Any, Any, Dict[str, Any]]],
     data_dir: str = "data",
     results_dir: str = "results",
     force_rerun: bool = False,
@@ -38,17 +39,13 @@ def run_or_load(
             results = pkl.load(f)
     else:
         logger.info("Running.")
-        results = run_fn(logger, exp_dict, data_dir)
+        results, model, metrics = run_fn(logger, exp_dict, data_dir)
 
         logger.info("Complete.")
 
         if save_return:
             logger.info("Saving results.")
-
-            # make sure save path exists
-            head, _ = os.path.split(path)
-            os.makedirs(head, exist_ok=True)
-            with open(path, "wb") as f:
-                pkl.dump(results, f)
+            # save the experiment to disk.
+            save_experiment(exp_dict, results_dir, results, metrics, model)
 
     return results
