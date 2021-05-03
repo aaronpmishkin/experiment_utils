@@ -46,9 +46,7 @@ def expand_config(config: Union[dict, Any], recurse: bool = True) -> List[dict]:
         if isinstance(exp_config_copy[key], dict) and recurse:
             exp_config_copy[key] = expand_config(exp_config_copy[key])
         elif isinstance(exp_config_copy[key], list) and recurse:
-            print(exp_config_copy[key])
             exp_config_copy[key] = reduce(lambda acc, v: acc + expand_config(v), exp_config_copy[key], [])
-            print(exp_config_copy[key])
         elif not isinstance(exp_config_copy[key], list):
             exp_config_copy[key] = [exp_config_copy[key]]
 
