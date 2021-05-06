@@ -116,14 +116,16 @@ def load_metric_grid(
             return x
 
     for row in grid.keys():
-        for col in grid[row].keys():
-            for line in grid[row][col].keys():
-                results = load_experiment(
-                    grid[row][col][line],
-                    results_dir,
-                    load_metrics=True,
-                    load_model=False,
-                )
-                results_grid[row][col][line] = metric_fn(results["metrics"])
+        for metric_name in grid[row].keys():
+            for line in grid[row][metric_name].keys():
+                results = []
+                for repeat in grid[row][metric_name][line].keys():
+                    results.append(load_experiment(
+                        grid[row][metric_name][line][repeat],
+                        results_dir,
+                        load_metrics=True,
+                        load_model=False,
+                    )["metrics"][metric_name])
+                results_grid[row][metric_name][line] = metric_fn(results)
 
     return results_grid

@@ -119,23 +119,54 @@ def make_grid(
     row_key: Union[Any, Iterator[Any]],
     col_key: Union[Any, Iterator[Any]],
     line_key: Union[Any, Iterator[Any]],
+    repeat_key: Union[Any, Iterator[Any]],
 ) -> dict:
     """Convert an experiment list of into grid of experiment dictionaries in preparation for plotting.
     :param exp_list: list of experiment dictionaries. These should be expanded and filtered.
     :param row_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different rows.
     :param col_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different columns.
     :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different lines.
+    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be *averaged* over in the plot.
     :returns: a nested dictionary whose first level is indexed by the unique values found at 'row_key', the second by the values at 'col_key', and the third by values at 'line_key'.
 
     """
-    grid: dict = defaultdict(lambda: defaultdict(dict))
+    grid: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
     for exp_dict in exp_list:
         row_val = get_nested_value(exp_dict, row_key)
         col_val = get_nested_value(exp_dict, col_key)
         line_val = get_nested_value(exp_dict, line_key)
+        repeat_val = get_nested_value(exp_dict, repeat_key)
 
-        grid[row_val][col_val][line_val] = exp_dict
+        grid[row_val][col_val][line_val][repeat_val] = exp_dict
+
+    return grid
+
+
+def make_metric_grid(
+    exp_list: List[dict],
+    metrics: List[str],
+    row_key: Union[Any, Iterator[Any]],
+    line_key: Union[Any, Iterator[Any]],
+    repeat_key: Union[Any, Iterator[Any]],
+) -> dict:
+    """Convert an experiment list of into grid of experiment dictionaries in preparation for plotting.
+    :param exp_list: list of experiment dictionaries. These should be expanded and filtered.
+    :param metrics: list of strings identifying different metrics.
+    :param row_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different rows.
+    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different lines.
+    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be *averaged* over in the plot.
+    :returns: a nested dictionary whose first level is indexed by the unique values found at 'row_key', the second by the values at 'col_key', and the third by values at 'line_key'.
+
+    """
+    grid: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+
+    for exp_dict, metric_name in product(exp_list, metrics):
+        row_val = get_nested_value(exp_dict, row_key)
+        line_val = get_nested_value(exp_dict, line_key)
+        repeat_val = get_nested_value(exp_dict, repeat_key)
+
+        grid[row_val][metric_name][line_val][repeat_val] = exp_dict
 
     return grid
 

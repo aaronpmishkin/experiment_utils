@@ -142,10 +142,6 @@ def plot_grid(
             if y_ticks is not None and len(y_ticks) > 0:
                 ax.yticks(y_ticks)
 
-        # limits
-        if try_cell_row_col(limits, row, col, None) is not None:
-            x_limits, y_limits = try_cell_row_col(limits, row, col, None)
-
         # plot the cell
         plot_fn(ax, results[row][col], line_kwargs, settings)
 
@@ -191,6 +187,6 @@ def plot_grid(
     if base_dir is not None:
         head, _ = os.path.split(base_dir)
         os.makedirs(head, exist_ok=True)
-        plt.savefig(base_dir, bbox_inches="tight")
+        plt.savefig(base_dir)
 
     return fig, axes

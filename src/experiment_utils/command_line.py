@@ -8,7 +8,7 @@ from warnings import warn
 
 
 def add_default_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
-    """Add default command line arguments for an experiment. By default, a new ArgmentParser is constructed and returned.
+    """Add default command line arguments for an experiment. By default, a new ArgumentParser is constructed and returned.
     :param parser: (optional) parser to which the default arguments should be added.
     :returns: parser with default arguments added.
     """
@@ -85,13 +85,21 @@ def add_default_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentPa
         default=None,
         help="Path to log-file for logger output.",
     )
+    # time experiment
+    parser.add_argument(
+        "-T",
+        "--timed",
+        dest="timed",
+        action="store_true",
+        help="Whether or not to time the experiment.",
+    )
 
     return parser
 
 
 def get_default_arguments(
     parser: Optional[ArgumentParser] = None,
-) -> Tuple[Tuple[str, str, str, bool, bool, bool, bool, str], Tuple[Namespace, List]]:
+) -> Tuple[Tuple[str, str, str, bool, bool, bool, bool, str, bool], Tuple[Namespace, List]]:
     """Create and parse default experiment arguments from the command line. Default behavior is to create a new ArgumentParser object.
     :param parser: (Optional) an ArgumentParser instance to which the default arguments should be added.
     :returns: default arguments unpacked into a tuple, the parser, the arguments object, and an extra, unparsed arguments.
@@ -110,7 +118,7 @@ def get_default_arguments(
 
 def unpack_defaults(
     arguments: Namespace,
-) -> Tuple[str, str, str, bool, bool, bool, bool, str]:
+) -> Tuple[str, str, str, bool, bool, bool, bool, str, bool]:
     return (
         arguments.exp_id,
         arguments.data_dir,
@@ -120,6 +128,7 @@ def unpack_defaults(
         arguments.verbose,
         arguments.debug,
         arguments.log_file,
+        arguments.timed,
     )
 
 
