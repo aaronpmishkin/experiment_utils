@@ -138,7 +138,7 @@ def get_logger(
     :param log_file: (optional) path to a file where the log should be stored. The log is printed to stdout when 'None'.
     :returns: instance of logging.Logger.
     """
-    print(debug)
+
     level = logging.WARNING
     if debug:
         level = logging.DEBUG
