@@ -40,7 +40,9 @@ def expand_config(config: Union[dict, Any], recurse: bool = True) -> List[dict]:
         return [config]
 
     config = cast(dict, config)
-    exp_config_copy = config.copy()
+    
+    # deep copy to ensure that configuration objects are all different.
+    exp_config_copy = deepcopy(config)
 
     for key in exp_config_copy.keys():
         if isinstance(exp_config_copy[key], dict) and recurse:
