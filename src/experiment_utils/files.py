@@ -5,11 +5,12 @@ Utilities for working with files.
 import os
 import pickle as pkl
 from copy import deepcopy
-from typing import Dict, Any, Callable, Optional, cast
+from typing import Dict, Any, Callable, Optional, cast, List, Tuple, Iterator, Union
 
 import torch
+import numpy as np
 
-from experiment_utils.configs import hash_dict
+from experiment_utils import configs, utils
 
 
 def save_experiment(
@@ -27,7 +28,7 @@ def save_experiment(
     :param model: (optional) the optimized model to be serialized.
     """
 
-    hash_id = hash_dict(exp_dict)
+    hash_id = configs.hash_dict(exp_dict)
     path = os.path.join(results_dir, hash_id)
 
     # make directory if it doesn't exist.
@@ -73,7 +74,7 @@ def load_experiment(
     :returns: dict containing results. It is indexed by 'return_value' and (optionally) 'metrics', 'model'.
     """
 
-    hash_id = hash_dict(exp_dict)
+    hash_id = configs.hash_dict(exp_dict)
     path = os.path.join(results_dir, hash_id)
     results = {}
 
@@ -120,12 +121,73 @@ def load_metric_grid(
             for line in grid[row][metric_name].keys():
                 results = []
                 for repeat in grid[row][metric_name][line].keys():
-                    results.append(load_experiment(
-                        grid[row][metric_name][line][repeat],
-                        results_dir,
-                        load_metrics=True,
-                        load_model=False,
-                    )["metrics"][metric_name])
+                    results.append(
+                        load_experiment(
+                            grid[row][metric_name][line][repeat],
+                            results_dir,
+                            load_metrics=True,
+                            load_model=False,
+                        )["metrics"][metric_name]
+                    )
                 results_grid[row][metric_name][line] = metric_fn(results)
 
     return results_grid
+
+
+def load_and_clean_experiments(
+    exp_configs: List[Dict[str, Any]],
+    results_dir: str,
+    metrics: List[str],
+    row_key: Union[Any, Iterator[Any]],
+    line_key: Union[Any, Iterator[Any]],
+    repeat_key: Union[Any, Iterator[Any]],
+    metric_fn: Callable = utils.quantile_metrics,
+    keep: List[Tuple[Any, Any]] = [],
+    remove: List[Tuple[Any, Any]] = [],
+    filter_fn: Optional[Callable] = None,
+    processing_fns: List[
+        Callable[[Dict[str, np.ndarray], Tuple], Dict[str, np.ndarray]]
+    ] = [],
+):
+    """Load and clean a grid of experiments according to the past parameters.
+    This is a convenience function which composes other built-ins.
+    :param exp_configs: list of experiment configuration objects. These will be expanded, filtered, and cleaned.
+    :param metrics: list of strings identifying different metrics.
+    :param row_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different rows.
+    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different lines.
+    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be *averaged* over in the plot.
+    :param metric_fn: (optional) function to process metrics after they are loaded.
+    :param keep: A list of key-value pairs to retain with the form `[(key, values)]`. Each `key` is either a singleton
+        key for the top-level dictionary or an iterable of keys indexing into nested dictionaries. `values` is either
+        singleton or list of values.
+    :param remove: A list of key-value pairs to filter with the form `[(key, values)]`. Arguments should taken the same
+        form as `keep`.
+    :param filter_fn: An additional filter to run on each dictionary.
+    :param processing_fns: a list of functions to be called on the leafs of the loaded experiment grid.
+        Order matters.
+    """
+
+    exp_list = configs.expand_config_list(exp_configs)
+    filtered_exp_list = configs.filter_dict_list(
+        exp_list,
+        keep=keep,
+        remove=remove,
+        filter_fn=filter_fn,
+    )
+    exp_grid = configs.make_metric_grid(
+        filtered_exp_list, metrics, row_key, line_key, repeat_key
+    )
+
+    metric_grid = load_metric_grid(exp_grid, results_dir, metric_fn=metric_fn)
+
+    def call_on_fn(exp, key):
+        for fn in processing_fns:
+            exp = fn(exp, key)
+        return exp
+
+    metric_grid = configs.call_on_grid(
+        metric_grid,
+        call_on_fn,
+    )
+
+    return metric_grid

@@ -13,6 +13,29 @@ from typing import Any, List, Tuple, Union, Optional, Callable, Iterator, cast
 from experiment_utils.utils import as_list
 
 
+def hash_dict(exp_dict: dict) -> str:
+    """Hash an experiment dictionary into a unique id.
+    Can be used as a file-name. Adapted from Haven AI (https://github.com/haven-ai/haven-ai).
+    :param exp_dict: An experiment dictionary.
+    :returns: A unique id for the experiment
+    """
+    dict2hash = ""
+    if not isinstance(exp_dict, dict):
+        raise ValueError("exp_dict is not a dict")
+
+    for k in sorted(exp_dict.keys()):
+        if isinstance(exp_dict[k], dict):
+            v = hash_dict(exp_dict[k])
+        else:
+            v = exp_dict[k]
+
+        dict2hash += os.path.join(str(k), str(v))
+
+    hash_id = hashlib.md5(dict2hash.encode()).hexdigest()
+
+    return hash_id
+
+
 def get_nested_value(exp_dict: dict, key: Union[Tuple, Any]) -> Any:
     """Access value in nested dictionary.
     :param exp_dict: a (nested) dictionary.
@@ -40,7 +63,7 @@ def expand_config(config: Union[dict, Any], recurse: bool = True) -> List[dict]:
         return [config]
 
     config = cast(dict, config)
-    
+
     # deep copy to ensure that configuration objects are all different.
     exp_config_copy = deepcopy(config)
 
@@ -48,7 +71,9 @@ def expand_config(config: Union[dict, Any], recurse: bool = True) -> List[dict]:
         if isinstance(exp_config_copy[key], dict) and recurse:
             exp_config_copy[key] = expand_config(exp_config_copy[key])
         elif isinstance(exp_config_copy[key], list) and recurse:
-            exp_config_copy[key] = reduce(lambda acc, v: acc + expand_config(v), exp_config_copy[key], [])
+            exp_config_copy[key] = reduce(
+                lambda acc, v: acc + expand_config(v), exp_config_copy[key], []
+            )
         elif not isinstance(exp_config_copy[key], list):
             exp_config_copy[key] = [exp_config_copy[key]]
 
@@ -92,18 +117,26 @@ def filter_dict_list(
 
     """
 
-    keys_to_check = zip(keep + remove, [True] * len(keep) + [False] * len(remove))
+    keys_to_check = list(zip(keep + remove, [True] * len(keep) + [False] * len(remove)))
 
     def key_filter(exp_dict):
+        keep = True
         for entry, to_keep in keys_to_check:
             key, values_to_check = entry
             values_to_check = as_list(values_to_check)
 
-            exp_value = get_nested_value(exp_dict, key)
+            try:
+                exp_value = get_nested_value(exp_dict, key)
+            except:
+                continue
+
             # keep or filter the experiment
-            return (exp_value in values_to_check and not to_keep) or (
-                exp_value not in values_to_check and to_keep
-            )
+            if to_keep:
+                keep = keep and exp_value in values_to_check
+            else:
+                keep = keep and exp_value not in values_to_check
+
+        return keep
 
     if filter_fn is not None:
 
@@ -135,10 +168,17 @@ def make_grid(
     grid: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
     for exp_dict in exp_list:
-        row_val = get_nested_value(exp_dict, row_key)
-        col_val = get_nested_value(exp_dict, col_key)
-        line_val = get_nested_value(exp_dict, line_key)
-        repeat_val = get_nested_value(exp_dict, repeat_key)
+
+        row_val = row_key(exp_dict) if callable(row_key) else get_nested_value(exp_dict, row_key)
+        line_val = line_key(exp_dict) if callable(line_key) else get_nested_value(exp_dict, line_key)
+        col_val = col_key(exp_dict) if callable(col_key) else get_nested_value(exp_dict, col_key)
+        repeat_val = repeat_key(exp_dict) if callable(repeat_key) else get_nested_value(exp_dict, repeat_key)
+
+        # do *not* silently overwrite other experiments.
+        if repeat_val in grid[row_val][col_key][line_val]:
+            raise ValueError(
+                f"Two experiment dicts match the same key-set: \n {grid[row_val][col_key][line_val][repeat_val]}, \n \n {exp_dict}."
+            )
 
         grid[row_val][col_val][line_val][repeat_val] = exp_dict
 
@@ -164,9 +204,16 @@ def make_metric_grid(
     grid: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
     for exp_dict, metric_name in product(exp_list, metrics):
-        row_val = get_nested_value(exp_dict, row_key)
-        line_val = get_nested_value(exp_dict, line_key)
-        repeat_val = get_nested_value(exp_dict, repeat_key)
+
+        row_val = row_key(exp_dict) if callable(row_key) else get_nested_value(exp_dict, row_key)
+        line_val = line_key(exp_dict) if callable(line_key) else get_nested_value(exp_dict, line_key)
+        repeat_val = repeat_key(exp_dict) if callable(repeat_key) else get_nested_value(exp_dict, repeat_key)
+
+        # do *not* silently overwrite other experiments.
+        if repeat_val in grid[row_val][metric_name][line_val]:
+            raise ValueError(
+                f"Two experiment dicts match the same key-set: \n {grid[row_val][metric_name][line_val][repeat_val]}, \n \n {exp_dict}."
+            )
 
         grid[row_val][metric_name][line_val][repeat_val] = exp_dict
 
@@ -183,29 +230,8 @@ def call_on_grid(exp_grid: dict, call_fn: Callable) -> dict:
     for row in exp_grid.keys():
         for col in exp_grid[row].keys():
             for line in exp_grid[row][col].keys():
-                new_grid[row][col][line] = call_fn(exp_grid[row][col][line])
+                new_grid[row][col][line] = call_fn(
+                    exp_grid[row][col][line], (row, col, line)
+                )
 
     return new_grid
-
-
-def hash_dict(exp_dict: dict) -> str:
-    """Hash an experiment dictionary into a unique id.
-    Can be used as a file-name. Adapted from Haven AI (https://github.com/haven-ai/haven-ai).
-    :param exp_dict: An experiment dictionary.
-    :returns: A unique id for the experiment
-    """
-    dict2hash = ""
-    if not isinstance(exp_dict, dict):
-        raise ValueError("exp_dict is not a dict")
-
-    for k in sorted(exp_dict.keys()):
-        if isinstance(exp_dict[k], dict):
-            v = hash_dict(exp_dict[k])
-        else:
-            v = exp_dict[k]
-
-        dict2hash += os.path.join(str(k), str(v))
-
-    hash_id = hashlib.md5(dict2hash.encode()).hexdigest()
-
-    return hash_id

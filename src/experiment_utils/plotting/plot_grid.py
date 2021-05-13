@@ -36,6 +36,7 @@ def plot_grid(
     line_kwargs: dict,
     limits: dict = {},
     ticks: dict = {},
+    log_scale: dict = {},
     settings: dict = DEFAULT_SETTINGS,
     base_dir: Optional[str] = None,
 ):
@@ -51,6 +52,8 @@ def plot_grid(
         y_lim are the desired limits for the y-axis. Can be indexed by cell, row, or column.
     :param ticks: dict of tuples (x_ticks, y_ticks), where x_ticks are the desiredd ticks for the x-axis
         y_ticks are the desired ticks for the y-axis. Can be indexed by cell, row, or column.
+    :param log_scale: dict of strings indicating whether or not to plot a cell, row, or column as a log-log,
+        log-linear, or linear-linear plot. Defaults to linear-linear.
     :param settings: dict with the plot configuration. See 'defaults.DEFAULT_SETTINGS' above.
     :param base_dir: location to save plot. Defaults to 'None', in which case the plot is not saved.
     :returns: figure and dictionary of axis objects indexed by the rows and columns.
@@ -145,6 +148,15 @@ def plot_grid(
         # plot the cell
         plot_fn(ax, results[row][col], line_kwargs, settings)
 
+        # log-scale:
+        if try_cell_row_col(log_scale, row, col, None) is not None:
+            log_type = try_cell_row_col(log_scale, row, col, None)
+            if log_type == "log-linear":
+                ax.set_yscale("log")
+            elif log_type == "log-log":
+                ax.set_yscale("log")
+                ax.set_xscale("log")
+
         # limits: needs to be done after plotting the data
         if try_cell_row_col(limits, row, col, None) is not None:
 
@@ -165,7 +177,7 @@ def plot_grid(
 
     ncol = settings["legend_cols"]
 
-    fig.legend(
+    legend = fig.legend(
         final_handles,
         final_labels,
         loc="lower center",
@@ -175,6 +187,9 @@ def plot_grid(
         ncol=ncol,
         fontsize=settings["legend_fs"],
     )
+
+    for line in legend.get_lines():
+        line.set_linewidth(settings.get("legend_lw", 2.0))
 
     bottom_margin = settings["bottom_margin"] / len(rows)
 

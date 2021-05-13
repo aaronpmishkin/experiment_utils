@@ -26,7 +26,7 @@ DEFAULT_SETTINGS = {
     "line_width": 4,            # width for lines in the plot.
     "line_alpha": 0.9,          # alpha for the lines themselves
     "bottom_margin": 0.22,
-    "wspace": 0.2,
+    "wspace": 0.3,
     "vspace": 0.15,
     # OPTIONS
     # titles and labels
@@ -35,6 +35,7 @@ DEFAULT_SETTINGS = {
     "y_labels": "left_col",     # "every_col",   # Where to put y-axis labels: "left_col" OR "every_col" OR False/None
     "x_labels": "bottom_row",   # Where to put x-axis labels: "bottom_col" OR "every_row" OR False/None
     "legend_cols": 4,           # number of columns for the legend
+    "legend_lw": 4.0,
     'ticklabel_format': 'plain',
 }
 

@@ -1,10 +1,10 @@
 """
 Generic utilities.
 """
+from typing import List, Any, Tuple, Union, Dict, Callable
 from functools import reduce, partial
 from warnings import warn
 import logging
-from typing import List, Any, Tuple, Union, Dict
 
 import numpy as np
 
@@ -121,6 +121,33 @@ def pad(array: Union[List, np.ndarray], length: int) -> np.ndarray:
 
     array_np = np.array(array)
     return np.concatenate([array_np, np.repeat([array_np[-1]], length - len(array_np))])
+
+
+def normalize(filter_func: Callable):
+    def closure(
+        metrics: Dict[str, np.ndarray], key: Tuple[Any]
+    ) -> Dict[str, np.ndarray]:
+        if filter_func(key):
+            metrics["center"] = metrics["center"] - metrics["center"][0]
+            metrics["upper"] = metrics["upper"] - metrics["upper"][0]
+            metrics["lower"] = metrics["lower"] - metrics["lower"][0]
+
+        return metrics
+
+    return closure
+
+
+def drop_start(start: int, filter_func: Callable):
+    def closure(
+        metrics: Dict[str, np.ndarray], key: Tuple[Any]
+    ) -> Dict[str, np.ndarray]:
+        if filter_func(key):
+            metrics["center"] = metrics["center"][start:]
+            metrics["upper"] = metrics["upper"][start:]
+            metrics["lower"] = metrics["lower"][start:]
+        return metrics
+
+    return closure
 
 
 # Logging #
