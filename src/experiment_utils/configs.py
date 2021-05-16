@@ -141,7 +141,7 @@ def filter_dict_list(
     if filter_fn is not None:
 
         def final_filter(exp_dict):
-            return key_filter(exp_dict) or filter_fn(exp_dict)
+            return key_filter(exp_dict) and filter_fn(exp_dict)
 
     else:
         final_filter = key_filter
