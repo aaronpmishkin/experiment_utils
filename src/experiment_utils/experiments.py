@@ -31,7 +31,7 @@ def run_or_load(
     :returns: the output of running the experiment, which is 'run_fn(logger, exp_dict)'.
     """
 
-    path = os.path.join(results_dir, hash_dict(exp_dict), "return_value.pkl")
+    path = os.path.join(results_dir, hash_dict(exp_dict), "metrics.pkl")
 
     if os.path.exists(path) and not force_rerun:
         logger.info("Loading results.")
