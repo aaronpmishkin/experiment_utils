@@ -1,7 +1,7 @@
 """
 Generic utilities.
 """
-from typing import List, Any, Tuple, Union, Dict, Callable
+from typing import List, Any, Tuple, Union, Dict, Callable, Optional
 from functools import reduce, partial
 from warnings import warn
 import logging
@@ -28,10 +28,12 @@ def as_list(x: Any) -> List[Any]:
 def quantile_metrics(
     metrics: Union[List, dict, np.ndarray],
     quantiles: Tuple[float, float] = (0.25, 0.75),
+    keys: Optional[List[Any]] = None,
 ) -> Dict[str, np.ndarray]:
     """Compute quantiles and median of supplied run metrics. Statistics are computed *across* columns.
-    :metrics: a list, np.ndarray, or dictionary containing run metrics.
-    :quantiles: (optional) the quantiles to compute. Defaults to the first and third quartiles (0.25, 0.75).
+    :param metrics: a list, np.ndarray, or dictionary containing run metrics.
+    :param quantiles: (optional) the quantiles to compute. Defaults to the first and third quartiles (0.25, 0.75).
+    :param keys: (optional) the keys associated with the each metric.
     :returns: dictionary object with dict['center'] = mean, dict['upper'] = mean + std*k, dict['upper'] = mean - std*k.
     """
     metric_dict = {}
@@ -68,11 +70,14 @@ def quantile_metrics(
 
 
 def std_dev_metrics(
-    metrics: Union[List, dict, np.ndarray], k: int = 1
+    metrics: Union[List, dict, np.ndarray],
+    k: int = 1,
+    keys: Optional[List[Any]] = None,
 ) -> Dict[str, np.ndarray]:
     """Compute standard mean and deviation of supplied run metrics. Statistics are computed *across* columns.
     :metrics: a list, np.ndarray, or dictionary containing run metrics.
     :param k: number of standard deviations for computer 'upper' and 'lower' error bounds.
+    :param keys: (optional) the keys associated with the each metric.
     :returns: dictionary object with dict['center'] = mean, dict['upper'] = mean + std*k, dict['upper'] = mean - std*k.
     """
     metric_dict = {}
@@ -98,6 +103,36 @@ def std_dev_metrics(
         warn(
             "Negative values encountered when computing lower error bounds. Consider using "
         )
+
+    return metric_dict
+
+
+def final_metrics(
+    metrics: Union[List, dict, np.ndarray],
+    window: int = 1,
+    keys: Optional[List[Any]] = None,
+) -> Dict[str, np.ndarray]:
+    """Extract final run metrics. Statistics are computed *across* columns.
+    :metrics: a list, np.ndarray, or dictionary containing run metrics.
+    :param window: length of window over which to take the max, min, and median.
+    :param keys: (optional) the keys associated with the each metric.
+    :returns: dictionary object with dict['center'] = mean, dict['upper'] = mean + std*k, dict['upper'] = mean - std*k.
+    """
+    metric_dict = {}
+    if isinstance(metrics, list) or isinstance(metrics, np.ndarray):
+        upper, lower, center = [], [], []
+        for run in metrics:
+            run_np = np.array(run)
+            upper.append(np.max(run_np[-window:]))
+            lower.append(np.min(run_np[-window:]))
+            center.append(np.median(run_np[-window:]))
+    else:
+        raise ValueError(f"Cannot interpret metrics of type {type(metrics)}!")
+
+    metric_dict["center"] = np.array(center)
+    metric_dict["upper"] = np.array(upper)
+    metric_dict["lower"] = np.array(lower)
+    metric_dict["x"] = np.array(list(keys))
 
     return metric_dict
 

@@ -156,6 +156,8 @@ def plot_grid(
             elif log_type == "log-log":
                 ax.set_yscale("log")
                 ax.set_xscale("log")
+            elif log_type == "linear-log":
+                ax.set_xscale("log")
 
         # limits: needs to be done after plotting the data
         if try_cell_row_col(limits, row, col, None) is not None:
@@ -189,10 +191,11 @@ def plot_grid(
     )
 
     for line in legend.get_lines():
-        line.set_linewidth(settings.get("legend_lw", 2.0))
+        line.set_linewidth(4.0)
 
     bottom_margin = settings["bottom_margin"] / len(rows)
 
+    plt.tight_layout()
     fig.subplots_adjust(
         wspace=settings.get("wspace", 0.2),
         hspace=settings.get("vspace", 0.2),

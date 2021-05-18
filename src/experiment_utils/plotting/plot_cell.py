@@ -34,7 +34,11 @@ def make_convergence_plot(
                 and "lower" in results[line]
             )
             y = results[line]["center"]
-            x = np.arange(len(y))
+
+            if "x" in results[line]:
+                x = results[line]["x"]
+            else:
+                x = np.arange(len(y))
 
             ax.fill_between(
                 x,

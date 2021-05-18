@@ -169,10 +169,26 @@ def make_grid(
 
     for exp_dict in exp_list:
 
-        row_val = row_key(exp_dict) if callable(row_key) else get_nested_value(exp_dict, row_key)
-        line_val = line_key(exp_dict) if callable(line_key) else get_nested_value(exp_dict, line_key)
-        col_val = col_key(exp_dict) if callable(col_key) else get_nested_value(exp_dict, col_key)
-        repeat_val = repeat_key(exp_dict) if callable(repeat_key) else get_nested_value(exp_dict, repeat_key)
+        row_val = (
+            row_key(exp_dict)
+            if callable(row_key)
+            else get_nested_value(exp_dict, row_key)
+        )
+        line_val = (
+            line_key(exp_dict)
+            if callable(line_key)
+            else get_nested_value(exp_dict, line_key)
+        )
+        col_val = (
+            col_key(exp_dict)
+            if callable(col_key)
+            else get_nested_value(exp_dict, col_key)
+        )
+        repeat_val = (
+            repeat_key(exp_dict)
+            if callable(repeat_key)
+            else get_nested_value(exp_dict, repeat_key)
+        )
 
         # do *not* silently overwrite other experiments.
         if repeat_val in grid[row_val][col_key][line_val]:
@@ -205,9 +221,21 @@ def make_metric_grid(
 
     for exp_dict, metric_name in product(exp_list, metrics):
 
-        row_val = row_key(exp_dict) if callable(row_key) else get_nested_value(exp_dict, row_key)
-        line_val = line_key(exp_dict) if callable(line_key) else get_nested_value(exp_dict, line_key)
-        repeat_val = repeat_key(exp_dict) if callable(repeat_key) else get_nested_value(exp_dict, repeat_key)
+        row_val = (
+            row_key(exp_dict)
+            if callable(row_key)
+            else get_nested_value(exp_dict, row_key)
+        )
+        line_val = (
+            line_key(exp_dict)
+            if callable(line_key)
+            else get_nested_value(exp_dict, line_key)
+        )
+        repeat_val = (
+            repeat_key(exp_dict)
+            if callable(repeat_key)
+            else get_nested_value(exp_dict, repeat_key)
+        )
 
         # do *not* silently overwrite other experiments.
         if repeat_val in grid[row_val][metric_name][line_val]:
@@ -218,6 +246,28 @@ def make_metric_grid(
         grid[row_val][metric_name][line_val][repeat_val] = exp_dict
 
     return grid
+
+
+def merge_grids(exp_grids: List[dict]) -> dict:
+    """Merge a list of metric grids.
+    :param exp_grids: a list of experiment grids with layers of keys,
+        (row, col, line).
+    :returns: a merged experiment grid.
+    """
+
+    base_grid = deepcopy(exp_grids[0])
+    for grid in exp_grids[1:]:
+        for row in grid.keys():
+            for col in grid[row].keys():
+                for line in grid[row][col].keys():
+                    if line in base_grid[row][col][line]:
+                        raise ValueError(
+                            f"Two experiment dicts match the same key-set: \n {grid[row][col][line]}, \n \n {base_grid[row][col][line]}."
+                        )
+                    else:
+                        base_grid[row][col][line] = grid[row][col][line]
+
+    return base_grid
 
 
 def call_on_grid(exp_grid: dict, call_fn: Callable) -> dict:

@@ -116,6 +116,7 @@ def add_plotting_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentP
     parser.add_argument(
         "-E",
         "--experiment",
+        nargs="*",
         required=True,
         dest="exp_id",
         help="The ID of the experiment to run.",
@@ -124,6 +125,7 @@ def add_plotting_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentP
     parser.add_argument(
         "-P",
         "--plot",
+        nargs="*",
         required=True,
         dest="plot_name",
         help="The name of the plot to generate.",
@@ -196,7 +198,7 @@ def get_experiment_arguments(
 
 def get_plotting_arguments(
     parser: Optional[ArgumentParser] = None,
-) -> Tuple[Tuple[str, str, str, str, bool, bool, str], Tuple[Namespace, List]]:
+) -> Tuple[Tuple[List[str], List[str], str, str, bool, bool, str], Tuple[Namespace, List]]:
     """Create and parse default plotting arguments from the command line. Default behavior is to create a new ArgumentParser object.
     :param parser: (Optional) an ArgumentParser instance to which the default arguments should be added.
     :returns: default arguments unpacked into a tuple, the parser, the arguments object, and an extra, unparsed arguments.
@@ -231,7 +233,7 @@ def unpack_experiment_defaults(
 
 def unpack_plotting_defaults(
     arguments: Namespace,
-) -> Tuple[str, str, str, str, bool, bool, str]:
+) -> Tuple[List[str], List[str], str, str, bool, bool, str]:
     return (
         arguments.exp_id,
         arguments.plot_name,
