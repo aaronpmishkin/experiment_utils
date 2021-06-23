@@ -114,6 +114,7 @@ def load_metric_grid(
     grid: dict,
     results_dir: Union[List[str], str] = "results",
     metric_fn: Callable = None,
+    x_key: str = None,
 ) -> dict:
     """Load metrics according to a supplied grid of experiment dictionaries.
     :param grid: a grid of experiment dictionaries. See 'configs.make_grid'.
@@ -144,6 +145,11 @@ def load_metric_grid(
                     )
                 results_grid[row][metric_name][line] = metric_fn(results, keys=repeats)
 
+        if x_key is not None:
+            for metric_name in grid[row].keys():
+                for line in grid[row][metric_name].keys():
+                    results_grid[row][metric_name][line]["x"] = results_grid[row][x_key][line]["center"]
+
     return results_grid
 
 
@@ -161,6 +167,7 @@ def load_and_clean_experiments(
     processing_fns: List[
         Callable[[Dict[str, np.ndarray], Tuple], Dict[str, np.ndarray]]
     ] = [],
+    x_key: Optional[str] = None,
 ):
     """Load and clean a grid of experiments according to the past parameters.
     This is a convenience function which composes other built-ins.
@@ -179,6 +186,7 @@ def load_and_clean_experiments(
     :param filter_fn: An additional filter to run on each dictionary.
     :param processing_fns: a list of functions to be called on the leafs of the loaded experiment grid.
         Order matters.
+    :param x_key: a key which indexes into the values which should be used as the x-axis.
     """
 
     exp_list = configs.expand_config_list(exp_configs)
@@ -192,7 +200,7 @@ def load_and_clean_experiments(
         filtered_exp_list, metrics, row_key, line_key, repeat_key
     )
 
-    metric_grid = load_metric_grid(exp_grid, results_dir, metric_fn=metric_fn)
+    metric_grid = load_metric_grid(exp_grid, results_dir, metric_fn=metric_fn, x_key=x_key)
 
     def call_on_fn(exp, key):
         for fn in processing_fns:

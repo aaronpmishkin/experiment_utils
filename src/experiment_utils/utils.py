@@ -132,7 +132,9 @@ def final_metrics(
     metric_dict["center"] = np.array(center)
     metric_dict["upper"] = np.array(upper)
     metric_dict["lower"] = np.array(lower)
-    metric_dict["x"] = np.array(list(keys))
+
+    if keys is not None:
+        metric_dict["x"] = np.array(list(keys))
 
     return metric_dict
 
