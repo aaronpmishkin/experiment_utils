@@ -207,4 +207,6 @@ def plot_grid(
         os.makedirs(head, exist_ok=True)
         plt.savefig(base_dir)
 
+    plt.close()
+
     return fig, axes

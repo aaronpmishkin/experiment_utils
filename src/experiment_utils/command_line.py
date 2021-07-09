@@ -95,6 +95,35 @@ def add_experiment_arguments(parser: Optional[ArgumentParser] = None) -> Argumen
         action="store_true",
         help="Whether or not to time the experiment.",
     )
+    # number of nodes on which to run.
+    parser.add_argument(
+        "-N",
+        "--nodes",
+        dest="nodes",
+        type=int,
+        default=None,
+        help="Number of nodes on which to run the experiment.",
+    )
+
+    # specific experiment indices to run.
+    parser.add_argument(
+        "-I",
+        "--indices",
+        nargs="*",
+        type=int,
+        dest="indices",
+        default=None,
+        help="Indices of specific experiments to run.",
+    )
+
+    # specific experiment indices to run.
+    parser.add_argument(
+        "-B",
+        "--sbatch",
+        dest="sbatch",
+        default=None,
+        help="Script file to use with Slurm 'sbatch' command.",
+    )
 
     return parser
 
@@ -178,7 +207,7 @@ def add_plotting_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentP
 def get_experiment_arguments(
     parser: Optional[ArgumentParser] = None,
 ) -> Tuple[
-    Tuple[str, str, str, bool, bool, bool, bool, str, bool], Tuple[Namespace, List]
+    Tuple[str, str, str, bool, bool, bool, bool, str, bool, int, List[int], str], Tuple[Namespace, List]
 ]:
     """Create and parse default experiment arguments from the command line. Default behavior is to create a new ArgumentParser object.
     :param parser: (Optional) an ArgumentParser instance to which the default arguments should be added.
@@ -217,7 +246,7 @@ def get_plotting_arguments(
 
 def unpack_experiment_defaults(
     arguments: Namespace,
-) -> Tuple[str, str, str, bool, bool, bool, bool, str, bool]:
+) -> Tuple[str, str, str, bool, bool, bool, bool, str, bool, int, List[int], str]:
     return (
         arguments.exp_id,
         arguments.data_dir,
@@ -228,6 +257,9 @@ def unpack_experiment_defaults(
         arguments.debug,
         arguments.log_file,
         arguments.timed,
+        arguments.nodes,
+        arguments.indices,
+        arguments.sbatch,
     )
 
 
