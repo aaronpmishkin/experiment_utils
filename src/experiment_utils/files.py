@@ -113,21 +113,30 @@ def load_experiment(
 def load_metric_grid(
     grid: dict,
     results_dir: Union[List[str], str] = "results",
-    metric_fn: Callable = None,
+    metric_fn: Optional[Callable] = None,
+    processing_fn: Optional[Callable] = None,
     x_key: str = None,
 ) -> dict:
     """Load metrics according to a supplied grid of experiment dictionaries.
     :param grid: a grid of experiment dictionaries. See 'configs.make_grid'.
     :param results_dir: base directory or list of base directories for experimental results.
     :param metric_fn: (optional) function to process metrics after they are loaded.
+    :param processing_fn: (optional) a function to call on each experiment to process the results.
+    :param x_key: (optional) metric to use as "x axis" information (e.g. "time").
     :returns: nested dictionary with the same "shape" as 'grid' containing the loaded metrics.
     """
 
     results_grid = deepcopy(grid)
+
     if metric_fn is None:
 
         def metric_fn(x):
             return x
+
+    if processing_fn is None:
+
+        def processing_fn(vals, keys):
+            return vals
 
     for row in grid.keys():
         for metric_name in grid[row].keys():
@@ -135,20 +144,26 @@ def load_metric_grid(
                 results = []
                 repeats = grid[row][metric_name][line].keys()
                 for repeat in repeats:
+                    vals = load_experiment(
+                        grid[row][metric_name][line][repeat],
+                        results_dir,
+                        load_metrics=True,
+                        load_model=False,
+                    )["metrics"][metric_name]
+
                     results.append(
-                        load_experiment(
-                            grid[row][metric_name][line][repeat],
-                            results_dir,
-                            load_metrics=True,
-                            load_model=False,
-                        )["metrics"][metric_name]
+                        processing_fn(
+                            np.array(vals), (row, metric_name, line, repeat),
+                        )
                     )
                 results_grid[row][metric_name][line] = metric_fn(results, keys=repeats)
 
         if x_key is not None:
             for metric_name in grid[row].keys():
                 for line in grid[row][metric_name].keys():
-                    results_grid[row][metric_name][line]["x"] = results_grid[row][x_key][line]["center"]
+                    results_grid[row][metric_name][line]["x"] = results_grid[row][
+                        x_key
+                    ][line]["center"]
 
     return results_grid
 
@@ -196,20 +211,34 @@ def load_and_clean_experiments(
         remove=remove,
         filter_fn=filter_fn,
     )
+
+    # make sure we load the metric associated with the x-axis.
+    added_x = False
+    if x_key is not None and x_key not in metrics:
+        added_x = True
+        metrics = metrics + [x_key]
+
     exp_grid = configs.make_metric_grid(
         filtered_exp_list, metrics, row_key, line_key, repeat_key
     )
-
-    metric_grid = load_metric_grid(exp_grid, results_dir, metric_fn=metric_fn, x_key=x_key)
 
     def call_on_fn(exp, key):
         for fn in processing_fns:
             exp = fn(exp, key)
         return exp
 
-    metric_grid = configs.call_on_grid(
-        metric_grid,
-        call_on_fn,
+    metric_grid = load_metric_grid(
+        exp_grid,
+        results_dir,
+        metric_fn=metric_fn,
+        processing_fn=call_on_fn,
+        x_key=x_key,
     )
+
+    # drop x if necessary
+    if added_x:
+        for row, val in metric_grid.items():
+            # remove x_key
+            val.pop(x_key)
 
     return metric_grid

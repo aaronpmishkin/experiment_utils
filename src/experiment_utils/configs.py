@@ -276,12 +276,14 @@ def call_on_grid(exp_grid: dict, call_fn: Callable) -> dict:
     :param call_fn: the function to call on each leaf value.
     :returns: a new experiment grid.
     """
+
     new_grid = deepcopy(exp_grid)
     for row in exp_grid.keys():
         for col in exp_grid[row].keys():
             for line in exp_grid[row][col].keys():
-                new_grid[row][col][line] = call_fn(
-                    exp_grid[row][col][line], (row, col, line)
-                )
+                for repeat in exp_grid[row][col][line].keys():
+                    new_grid[row][col][line][repeat] = call_fn(
+                        exp_grid[row][col][line][repeat], (row, col, line, repeat)
+                    )
 
     return new_grid

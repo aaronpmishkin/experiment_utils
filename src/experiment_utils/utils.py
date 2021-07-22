@@ -153,7 +153,11 @@ def pad(array: Union[List, np.ndarray], length: int) -> np.ndarray:
     :param array: 1-d np.ndarray or list.
     :param length: length to which the 'array' should be extended.
     """
-    if length < len(array):
+
+    if length == 0:
+        return np.array([1.0])
+
+    elif length < len(array):
         raise ValueError("'length' must be at least the length of 'array'!")
 
     array_np = np.array(array)
@@ -162,30 +166,38 @@ def pad(array: Union[List, np.ndarray], length: int) -> np.ndarray:
 
 def normalize(filter_func: Callable):
     def closure(
-        metrics: Dict[str, np.ndarray], key: Tuple[Any]
-    ) -> Dict[str, np.ndarray]:
+        vals: Union[list, np.ndarray], key: Tuple[Any]
+    ) -> Union[list, np.ndarray]:
         if filter_func(key):
-            metrics["center"] = metrics["center"] - metrics["center"][0]
-            metrics["upper"] = metrics["upper"] - metrics["upper"][0]
-            metrics["lower"] = metrics["lower"] - metrics["lower"][0]
+            vals = vals - vals[0]
 
-        return metrics
+        return vals
 
     return closure
 
 
 def drop_start(start: int, filter_func: Callable):
     def closure(
-        metrics: Dict[str, np.ndarray], key: Tuple[Any]
-    ) -> Dict[str, np.ndarray]:
-        if filter_func(key):
-            metrics["center"] = metrics["center"][start:]
-            metrics["upper"] = metrics["upper"][start:]
-            metrics["lower"] = metrics["lower"][start:]
-        return metrics
+        vals: Union[list, np.ndarray], key: Tuple[Any]
+    ) -> Union[list, np.ndarray]:
+        if filter_func(key) and len(vals) > start:
+            vals = vals[start:]
+
+        return vals
 
     return closure
 
+
+def cum_sum(filter_func: Callable):
+    def closure(
+        vals: Union[list, np.ndarray], key: Tuple[Any]
+    ) -> Union[list, np.ndarray]:
+        if filter_func(key):
+            vals = np.cumsum(vals)
+
+        return vals
+
+    return closure
 
 # Logging #
 
