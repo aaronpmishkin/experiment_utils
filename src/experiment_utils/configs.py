@@ -1,19 +1,18 @@
 """
 Utilities for working with experiment dictionaries.
 """
-
 import os
 import hashlib
 from collections import defaultdict
 from itertools import product
 from functools import reduce
 from copy import deepcopy
-from typing import Any, List, Tuple, Union, Optional, Callable, Iterator, cast
+from typing import Any, List, Tuple, Union, Optional, Callable, Iterator, cast, Dict
 
 from experiment_utils.utils import as_list
 
 
-def hash_dict(exp_dict: dict) -> str:
+def hash_dict(exp_dict: Dict) -> str:
     """Hash an experiment dictionary into a unique id.
     Can be used as a file-name. Adapted from Haven AI (https://github.com/haven-ai/haven-ai).
     :param exp_dict: An experiment dictionary.
@@ -36,7 +35,7 @@ def hash_dict(exp_dict: dict) -> str:
     return hash_id
 
 
-def get_nested_value(exp_dict: dict, key: Union[Tuple, Any]) -> Any:
+def get_nested_value(exp_dict: Dict, key: Union[Tuple, Any]) -> Any:
     """Access value in nested dictionary.
     :param exp_dict: a (nested) dictionary.
     :param key: a singleton or iterable of keys for the nested dictionary.
@@ -50,7 +49,7 @@ def get_nested_value(exp_dict: dict, key: Union[Tuple, Any]) -> Any:
     return value
 
 
-def expand_config(config: Union[dict, Any], recurse: bool = True) -> List[dict]:
+def expand_config(config: Union[Dict, Any], recurse: bool = True) -> List[Dict]:
     """Expand an experiment configuration into a list of experiment dictionaries.
     Inspired by Haven AI [https://github.com/haven-ai/haven-ai/]
     :param config: A (nested) dictionary with options for the experiments to run.
@@ -67,7 +66,8 @@ def expand_config(config: Union[dict, Any], recurse: bool = True) -> List[dict]:
     # deep copy to ensure that configuration objects are all different.
     exp_config_copy = deepcopy(config)
 
-    for key in exp_config_copy.keys():
+    # sort to ensure consistent order.
+    for key in sorted(exp_config_copy.keys()):
         if isinstance(exp_config_copy[key], dict) and recurse:
             exp_config_copy[key] = expand_config(exp_config_copy[key])
         elif isinstance(exp_config_copy[key], list) and recurse:
@@ -86,7 +86,7 @@ def expand_config(config: Union[dict, Any], recurse: bool = True) -> List[dict]:
     return exp_list
 
 
-def expand_config_list(config_list: List[dict]) -> List[dict]:
+def expand_config_list(config_list: List[Dict]) -> List[Dict]:
     """Convenience function for expanding a list of experiment configurations.
     See `expand_config` for details on the expansion operation.
     :param config_list: list of configuration objects to expand.
@@ -100,11 +100,11 @@ def expand_config_list(config_list: List[dict]) -> List[dict]:
 
 
 def filter_dict_list(
-    dict_list: List[dict],
+    dict_list: List[Dict],
     keep: List[Tuple[Any, Any]] = [],
     remove: List[Tuple[Any, Any]] = [],
     filter_fn: Optional[Callable] = None,
-) -> List[dict]:
+) -> List[Dict]:
     """Filter list of (nested) dictionaries based on key-value pairs.
     :param dict_list: A list of dictionary objects. Each dictionary object may be composed of nested dictionaries.
     :param keep: A list of key-value pairs to retain with the form `[(key, values)]`. Each `key` is either a singleton
@@ -150,12 +150,12 @@ def filter_dict_list(
 
 
 def make_grid(
-    exp_list: List[dict],
+    exp_list: List[Dict],
     row_key: Union[Any, Iterator[Any]],
     col_key: Union[Any, Iterator[Any]],
     line_key: Union[Any, Iterator[Any]],
     repeat_key: Union[Any, Iterator[Any]],
-) -> dict:
+) -> Dict:
     """Convert an experiment list of into grid of experiment dictionaries in preparation for plotting.
     :param exp_list: list of experiment dictionaries. These should be expanded and filtered.
     :param row_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different rows.
@@ -202,12 +202,12 @@ def make_grid(
 
 
 def make_metric_grid(
-    exp_list: List[dict],
+    exp_list: List[Dict],
     metrics: List[str],
     row_key: Union[Any, Iterator[Any]],
     line_key: Union[Any, Iterator[Any]],
     repeat_key: Union[Any, Iterator[Any]],
-) -> dict:
+) -> Dict:
     """Convert an experiment list of into grid of experiment dictionaries in preparation for plotting.
     :param exp_list: list of experiment dictionaries. These should be expanded and filtered.
     :param metrics: list of strings identifying different metrics.
@@ -248,7 +248,7 @@ def make_metric_grid(
     return grid
 
 
-def merge_grids(exp_grids: List[dict]) -> dict:
+def merge_grids(exp_grids: List[Dict]) -> Dict:
     """Merge a list of metric grids.
     :param exp_grids: a list of experiment grids with layers of keys,
         (row, col, line).
@@ -270,7 +270,7 @@ def merge_grids(exp_grids: List[dict]) -> dict:
     return base_grid
 
 
-def call_on_grid(exp_grid: dict, call_fn: Callable) -> dict:
+def call_on_grid(exp_grid: Dict, call_fn: Callable) -> Dict:
     """Call 'call_fn' on the values stored in the leafs of an experiment grid.
     :param exp_grid: a grid of experiments such as generated by 'make_grid'.
     :param call_fn: the function to call on each leaf value.

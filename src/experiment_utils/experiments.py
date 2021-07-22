@@ -8,7 +8,7 @@ from logging import Logger
 from typing import Callable, Dict, Any, Tuple
 
 from experiment_utils.configs import hash_dict
-from experiment_utils.files import save_experiment
+from experiment_utils.files import save_experiment, load_experiment
 
 
 def run_or_load(
@@ -39,7 +39,10 @@ def run_or_load(
             results = pkl.load(f)
     else:
         logger.info("Running.")
-        results, model, metrics = run_fn(logger, exp_dict, data_dir)
+
+        results, model, metrics = run_fn(
+            logger, exp_dict, data_dir, load_src_experiment(results_dir, exp_dict)
+        )
 
         logger.info("Complete.")
 
@@ -49,3 +52,19 @@ def run_or_load(
             save_experiment(exp_dict, results_dir, results, metrics, model)
 
     return results
+
+
+def load_src_experiment(results_dir, exp_dict):
+
+    model = None
+    if "src_hash" in exp_dict:
+        results = load_experiment(
+            hash_id=exp_dict["src_hash"],
+            results_dir=results_dir,
+            load_metrics=False,
+            load_model=True,
+        )
+
+        model = results["model"]
+
+    return model

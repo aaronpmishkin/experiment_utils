@@ -61,7 +61,8 @@ def save_experiment(
 
 
 def load_experiment(
-    exp_dict: dict,
+    exp_dict: dict = None,
+    hash_id: str = None,
     results_dir: Union[List[str], str] = "results",
     load_metrics: bool = False,
     load_model: bool = False,
@@ -73,8 +74,12 @@ def load_experiment(
     :param load_model: whether or not to load a model associated with the experiment.
     :returns: dict containing results. It is indexed by 'return_value' and (optionally) 'metrics', 'model'.
     """
+    if hash_id is None:
+        if exp_dict is None:
+            raise ValueError("One of 'exp_dict' or 'hash_id' must not be 'None'.")
 
-    hash_id = configs.hash_dict(exp_dict)
+        hash_id = configs.hash_dict(exp_dict)
+
     results = {}
 
     success = False
