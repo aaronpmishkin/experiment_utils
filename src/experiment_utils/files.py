@@ -74,6 +74,7 @@ def load_experiment(
     :param load_model: whether or not to load a model associated with the experiment.
     :returns: dict containing results. It is indexed by 'return_value' and (optionally) 'metrics', 'model'.
     """
+
     if hash_id is None:
         if exp_dict is None:
             raise ValueError("One of 'exp_dict' or 'hash_id' must not be 'None'.")
@@ -150,8 +151,8 @@ def load_metric_grid(
                 repeats = grid[row][metric_name][line].keys()
                 for repeat in repeats:
                     vals = load_experiment(
-                        grid[row][metric_name][line][repeat],
-                        results_dir,
+                        exp_dict=grid[row][metric_name][line][repeat],
+                        results_dir=results_dir,
                         load_metrics=True,
                         load_model=False,
                     )["metrics"][metric_name]
