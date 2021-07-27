@@ -199,6 +199,7 @@ def cum_sum(filter_func: Callable):
 
     return closure
 
+
 # Logging #
 
 
