@@ -60,7 +60,7 @@ def load_src_experiment(results_dir, exp_dict):
     if "src_hash" in exp_dict:
         results = load_experiment(
             hash_id=exp_dict["src_hash"],
-            results_dir=results_dir,
+            results_dir=exp_dict.get("src_dir", results_dir),
             load_metrics=False,
             load_model=True,
         )
