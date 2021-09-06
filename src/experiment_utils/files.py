@@ -91,7 +91,7 @@ def load_experiment(
             break
 
     if not success:
-        raise ValueError(f"Cannot find experiment in one of {results_dir}!")
+        raise ValueError(f"Cannot find experiment {exp_dict} in one of {results_dir}!")
 
     try:
         with open(os.path.join(path, "return_value.pkl"), "rb") as f:
