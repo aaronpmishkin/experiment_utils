@@ -37,13 +37,14 @@ def make_convergence_plot(
 
             if "x" in results[line]:
                 x = results[line]["x"]
+                y = y[0 : len(x)]
             else:
                 x = np.arange(len(y))
 
             ax.fill_between(
                 x,
-                results[line]["lower"],
-                results[line]["upper"],
+                results[line]["lower"][0 : len(x)],
+                results[line]["upper"][0 : len(x)],
                 alpha=settings["error_alpha"],
                 color=line_kwargs[line]["c"],
             )
@@ -52,7 +53,9 @@ def make_convergence_plot(
             x = np.arange(len(y))
 
         ax.plot(x, y, alpha=settings["line_alpha"], **line_kwargs[line])
-        ax.plot([x[-1]], [y[-1]], color=line_kwargs[line]["c"], marker="*", markersize=18)
+        ax.plot(
+            [x[-1]], [y[-1]], color=line_kwargs[line]["c"], marker="*", markersize=18
+        )
 
 
 def make_error_bar_plot(
