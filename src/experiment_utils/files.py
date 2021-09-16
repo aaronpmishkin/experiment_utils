@@ -4,6 +4,7 @@ Utilities for working with files.
 
 import os
 import pickle as pkl
+import json
 from copy import deepcopy
 from typing import Dict, Any, Callable, Optional, cast, List, Tuple, Iterator, Union
 
@@ -33,6 +34,10 @@ def save_experiment(
 
     # make directory if it doesn't exist.
     os.makedirs(path, exist_ok=True)
+
+    # write the experiment configuration to disk.
+    with open(os.path.join(path, "config.json"), "w") as f:
+        json.dump(exp_dict, f)
 
     if results is not None:
         with open(os.path.join(path, "return_value.pkl"), "wb") as f:
