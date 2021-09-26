@@ -254,4 +254,7 @@ def get_logger(
         level = logging.INFO
 
     logging.basicConfig(level=level, filename=log_file)
-    return logging.getLogger(name)
+    logger = logging.getLogger(name)
+    logging.root.setLevel(level)
+    logger.setLevel(level)
+    return logger
