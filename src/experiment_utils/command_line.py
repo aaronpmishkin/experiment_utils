@@ -116,13 +116,29 @@ def add_experiment_arguments(parser: Optional[ArgumentParser] = None) -> Argumen
         help="Indices of specific experiments to run.",
     )
 
-    # specific experiment indices to run.
+    # sbatch file to use when submitting the job.
     parser.add_argument(
         "-B",
         "--sbatch",
         dest="sbatch",
         default=None,
         help="Script file to use with Slurm 'sbatch' command.",
+    )
+
+    # shuffle the data before running
+    parser.add_argument(
+        "--shuffle",
+        dest="shuffle",
+        action="store_true",
+        help="Whether or not to shuffle the experiment order before running.",
+    )
+
+    # group experiments by dataset
+    parser.add_argument(
+        "--group_by_dataset",
+        dest="group_by_dataset",
+        action="store_true",
+        help="Whether or not to group the experiments by dataset. Incompatible with --nodes and --shuffle.",
     )
 
     return parser
@@ -207,7 +223,23 @@ def add_plotting_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentP
 def get_experiment_arguments(
     parser: Optional[ArgumentParser] = None,
 ) -> Tuple[
-    Tuple[str, str, str, bool, bool, bool, bool, str, bool, int, List[int], str], Tuple[Namespace, List]
+    Tuple[
+        str,
+        str,
+        str,
+        bool,
+        bool,
+        bool,
+        bool,
+        str,
+        bool,
+        int,
+        List[int],
+        str,
+        bool,
+        bool,
+    ],
+    Tuple[Namespace, List],
 ]:
     """Create and parse default experiment arguments from the command line. Default behavior is to create a new ArgumentParser object.
     :param parser: (Optional) an ArgumentParser instance to which the default arguments should be added.
@@ -227,7 +259,9 @@ def get_experiment_arguments(
 
 def get_plotting_arguments(
     parser: Optional[ArgumentParser] = None,
-) -> Tuple[Tuple[List[str], List[str], str, str, bool, bool, str], Tuple[Namespace, List]]:
+) -> Tuple[
+    Tuple[List[str], List[str], str, str, bool, bool, str], Tuple[Namespace, List]
+]:
     """Create and parse default plotting arguments from the command line. Default behavior is to create a new ArgumentParser object.
     :param parser: (Optional) an ArgumentParser instance to which the default arguments should be added.
     :returns: default arguments unpacked into a tuple, the parser, the arguments object, and an extra, unparsed arguments.
@@ -246,7 +280,9 @@ def get_plotting_arguments(
 
 def unpack_experiment_defaults(
     arguments: Namespace,
-) -> Tuple[str, str, str, bool, bool, bool, bool, str, bool, int, List[int], str]:
+) -> Tuple[
+    str, str, str, bool, bool, bool, bool, str, bool, int, List[int], str, bool, bool
+]:
     return (
         arguments.exp_id,
         arguments.data_dir,
@@ -260,6 +296,8 @@ def unpack_experiment_defaults(
         arguments.nodes,
         arguments.indices,
         arguments.sbatch,
+        arguments.shuffle,
+        arguments.group_by_dataset,
     )
 
 
