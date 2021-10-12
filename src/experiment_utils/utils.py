@@ -189,6 +189,18 @@ def drop_start(start: int, filter_func: Callable):
     return closure
 
 
+def extend(length: int, filter_func: Callable):
+    def closure(
+        vals: Union[list, np.ndarray], key: Tuple[Any]
+    ) -> Union[list, np.ndarray]:
+        if filter_func(key) and len(vals) < length:
+            vals = pad(vals, length)
+
+        return vals
+
+    return closure
+
+
 def cum_sum(filter_func: Callable):
     def closure(
         vals: Union[list, np.ndarray], key: Tuple[Any]

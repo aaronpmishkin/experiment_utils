@@ -179,19 +179,20 @@ def plot_grid(
 
     ncol = settings["legend_cols"]
 
-    legend = fig.legend(
-        final_handles,
-        final_labels,
-        loc="lower center",
-        borderaxespad=0.1,
-        fancybox=False,
-        shadow=False,
-        ncol=ncol,
-        fontsize=settings["legend_fs"],
-    )
+    if settings["show_legend"]:
+        legend = fig.legend(
+            final_handles,
+            final_labels,
+            loc="lower center",
+            borderaxespad=0.1,
+            fancybox=False,
+            shadow=False,
+            ncol=ncol,
+            fontsize=settings["legend_fs"],
+        )
 
-    for line in legend.get_lines():
-        line.set_linewidth(4.0)
+        for line in legend.get_lines():
+            line.set_linewidth(4.0)
 
     bottom_margin = settings["bottom_margin"] / len(rows)
 
