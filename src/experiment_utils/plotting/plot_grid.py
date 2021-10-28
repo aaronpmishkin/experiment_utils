@@ -187,6 +187,7 @@ def plot_grid(
             borderaxespad=0.1,
             fancybox=False,
             shadow=False,
+            frameon=False,
             ncol=ncol,
             fontsize=settings["legend_fs"],
         )

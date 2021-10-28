@@ -213,6 +213,18 @@ def cum_sum(filter_func: Callable):
     return closure
 
 
+def total_f_evals(filter_func: Callable):
+    def closure(
+        vals: Union[list, np.ndarray], key: Tuple[Any]
+    ) -> Union[list, np.ndarray]:
+        if filter_func(key):
+            vals = np.cumsum(vals + 1.0)
+
+        return vals
+
+    return closure
+
+
 # data transformation functions
 
 

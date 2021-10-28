@@ -53,9 +53,14 @@ def make_convergence_plot(
             x = np.arange(len(y))
 
         ax.plot(x, y, alpha=settings["line_alpha"], **line_kwargs[line])
-        # ax.plot(
-        #     [x[-1]], [y[-1]], color=line_kwargs[line]["c"], marker="*", markersize=18
-        # )
+        if settings.get("star_final", False):
+            ax.plot(
+                [x[-1]],
+                [y[-1]],
+                color=line_kwargs[line]["c"],
+                marker="*",
+                markersize=22,
+            )
 
 
 def make_error_bar_plot(
