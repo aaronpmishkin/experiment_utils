@@ -1,6 +1,7 @@
 """
 Generic utilities.
 """
+from copy import deepcopy
 from typing import List, Any, Tuple, Union, Dict, Callable, Optional
 from functools import reduce, partial
 from warnings import warn
@@ -188,6 +189,18 @@ def drop_start(start: int, filter_func: Callable):
     return closure
 
 
+def extend(length: int, filter_func: Callable):
+    def closure(
+        vals: Union[list, np.ndarray], key: Tuple[Any]
+    ) -> Union[list, np.ndarray]:
+        if filter_func(key) and len(vals) < length:
+            vals = pad(vals, length)
+
+        return vals
+
+    return closure
+
+
 def cum_sum(filter_func: Callable):
     def closure(
         vals: Union[list, np.ndarray], key: Tuple[Any]
@@ -198,6 +211,48 @@ def cum_sum(filter_func: Callable):
         return vals
 
     return closure
+
+
+def total_f_evals(filter_func: Callable):
+    def closure(
+        vals: Union[list, np.ndarray], key: Tuple[Any]
+    ) -> Union[list, np.ndarray]:
+        if filter_func(key):
+            vals = np.cumsum(vals + 1.0)
+
+        return vals
+
+    return closure
+
+
+# data transformation functions
+
+
+def replace_x_axis(metric_grid):
+    results_grid = deepcopy(metric_grid)
+
+    for row in metric_grid.keys():
+        for metric_name in metric_grid[row].keys():
+            for line in metric_grid[row][metric_name].keys():
+                results = {}
+                repeats = metric_grid[row][metric_name][line].keys()
+
+                for (x_key, repeat_key) in repeats:
+                    vals = results_grid[row][metric_name][line][(x_key, repeat_key)]
+
+                    results[repeat_key] = results.get(repeat_key, []) + [
+                        (x_key, vals[-1])
+                    ]
+
+                # make sure the order is correct.
+                for key, val in results.items():
+                    results[key] = np.array(
+                        [final for lam, final in sorted(val, key=lambda x: x[0])]
+                    )
+
+                results_grid[row][metric_name][line] = results
+
+    return results_grid
 
 
 # Logging #
@@ -223,4 +278,7 @@ def get_logger(
         level = logging.INFO
 
     logging.basicConfig(level=level, filename=log_file)
-    return logging.getLogger(name)
+    logger = logging.getLogger(name)
+    logging.root.setLevel(level)
+    logger.setLevel(level)
+    return logger
