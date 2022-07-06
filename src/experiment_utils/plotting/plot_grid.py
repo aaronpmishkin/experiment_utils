@@ -62,7 +62,10 @@ def plot_grid(
     cols = list(results[rows[0]].keys())
 
     fig = plt.figure(
-        figsize=(settings["fig_width"] * len(cols), len(rows) * settings["fig_height"])
+        figsize=(
+            settings["fig_width"] * len(cols),
+            len(rows) * settings["fig_height"],
+        )
     )
 
     # grid spec.
@@ -91,7 +94,9 @@ def plot_grid(
 
         # in the top row
         if settings.get("col_titles", False) and i < len(cols):
-            ax.set_title(col_titles.get(col, ""), fontsize=settings["subtitle_fs"])
+            ax.set_title(
+                col_titles.get(col, ""), fontsize=settings["subtitle_fs"]
+            )
 
         if settings.get("row_titles", False) and i % len(cols) == 0:
             ax.annotate(
@@ -107,8 +112,13 @@ def plot_grid(
             )
 
         # start of a new row
-        if settings.get("y_labels", False) == "left_col" and i % len(cols) == 0:
-            ax.set_ylabel(y_labels.get(row, ""), fontsize=settings["axis_labels_fs"])
+        if (
+            settings.get("y_labels", False) == "left_col"
+            and i % len(cols) == 0
+        ):
+            ax.set_ylabel(
+                y_labels.get(row, ""), fontsize=settings["axis_labels_fs"]
+            )
         elif settings.get("y_labels", False) == "every_col":
             ax.set_ylabel(
                 try_cell_row_col(y_labels, row, col, ""),
@@ -120,7 +130,9 @@ def plot_grid(
             settings.get("x_labels", False) == "bottom_row"
             and len(cols) * (len(rows) - 1) <= i
         ):
-            ax.set_xlabel(x_labels.get(col, ""), fontsize=settings["axis_labels_fs"])
+            ax.set_xlabel(
+                x_labels.get(col, ""), fontsize=settings["axis_labels_fs"]
+            )
         elif settings.get("x_labels", False) == "every_row":
             ax.set_xlabel(
                 try_cell_row_col(x_labels, row, col, ""),

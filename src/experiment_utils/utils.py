@@ -30,6 +30,7 @@ def quantile_metrics(
     metrics: Union[List, dict, np.ndarray],
     quantiles: Tuple[float, float] = (0.25, 0.75),
     keys: Optional[List[Any]] = None,
+    metric_name: Optional[str] = None,
 ) -> Dict[str, np.ndarray]:
     """Compute quantiles and median of supplied run metrics. Statistics are computed *across* columns.
     :param metrics: a list, np.ndarray, or dictionary containing run metrics.
@@ -50,7 +51,13 @@ def quantile_metrics(
             )
         q_0, q_1, median = metrics[q_0_key], metrics[q_1_key], metrics["median"]
     elif isinstance(metrics, list):
-        metrics_np = equalize_arrays(metrics)
+        value = None
+        if metric_name == "time":
+            value = 0.0
+        metrics_np = equalize_arrays(metrics, value=value)
+        if metric_name == "time":
+            metrics_np = np.cumsum(metrics_np, axis=-1)
+
         q_0, q_1 = np.quantile(metrics_np, quantiles[0], axis=0), np.quantile(
             metrics_np, quantiles[1], axis=0
         )
@@ -74,6 +81,7 @@ def std_dev_metrics(
     metrics: Union[List, dict, np.ndarray],
     k: int = 1,
     keys: Optional[List[Any]] = None,
+    metric_name: Optional[str] = None,
 ) -> Dict[str, np.ndarray]:
     """Compute standard mean and deviation of supplied run metrics. Statistics are computed *across* columns.
     :metrics: a list, np.ndarray, or dictionary containing run metrics.
@@ -112,6 +120,7 @@ def final_metrics(
     metrics: Union[List, dict, np.ndarray],
     window: int = 1,
     keys: Optional[List[Any]] = None,
+    metric_name: Optional[str] = None,
 ) -> Dict[str, np.ndarray]:
     """Extract final run metrics. Statistics are computed *across* columns.
     :metrics: a list, np.ndarray, or dictionary containing run metrics.
@@ -140,16 +149,18 @@ def final_metrics(
     return metric_dict
 
 
-def equalize_arrays(array_list: List[Union[List, np.ndarray]]) -> np.ndarray:
+def equalize_arrays(
+    array_list: List[Union[List, np.ndarray]], value=None
+) -> np.ndarray:
     """Equalize the length of lists or np.ndarray objects inside a list by extending final values.
     :param array_list: list of arrays (or lists) to extend.
     :returns: np.ndarray object composed of extended lists.
     """
     max_length = reduce(lambda acc, x: max(acc, len(x)), array_list, 0)
-    return np.array(list(map(partial(pad, length=max_length), array_list)))
+    return np.array(list(map(partial(pad, length=max_length, value=value), array_list)))
 
 
-def pad(array: Union[List, np.ndarray], length: int) -> np.ndarray:
+def pad(array: Union[List, np.ndarray], length: int, value=None) -> np.ndarray:
     """Pad 'array' with it's last value until it len(array) = length.
     :param array: 1-d np.ndarray or list.
     :param length: length to which the 'array' should be extended.
@@ -162,7 +173,9 @@ def pad(array: Union[List, np.ndarray], length: int) -> np.ndarray:
         raise ValueError("'length' must be at least the length of 'array'!")
 
     array_np = np.array(array)
-    return np.concatenate([array_np, np.repeat([array_np[-1]], length - len(array_np))])
+    if value is None:
+        value = array_np[-1]
+    return np.concatenate([array_np, np.repeat([value], length - len(array_np))])
 
 
 def normalize(filter_func: Callable):
