@@ -6,6 +6,7 @@ import os
 import pickle as pkl
 import json
 from copy import deepcopy
+from collections import defaultdict
 from typing import Dict, Any, Callable, Optional, cast, List, Tuple, Iterator, Union
 
 import torch
@@ -124,6 +125,7 @@ def load_metric_grid(
     grid: dict,
     results_dir: Union[List[str], str] = "results",
     processing_fn: Optional[Callable] = None,
+    silent_fail: bool = False
 ) -> dict:
     """Load metrics according to a supplied grid of experiment dictionaries.
     :param grid: a grid of experiment dictionaries. See 'configs.make_grid'.
@@ -133,6 +135,7 @@ def load_metric_grid(
     """
 
     results_grid = deepcopy(grid)
+    results_grid = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
     if processing_fn is None:
 
         def processing_fn(vals, keys):
@@ -142,12 +145,18 @@ def load_metric_grid(
         for metric_name in grid[row].keys():
             for line in grid[row][metric_name].keys():
                 for repeat in grid[row][metric_name][line].keys():
-                    metrics = load_experiment(
-                        exp_dict=grid[row][metric_name][line][repeat],
-                        results_dir=results_dir,
-                        load_metrics=True,
-                        load_model=False,
-                    )["metrics"]
+                    try:
+                        metrics = load_experiment(
+                            exp_dict=grid[row][metric_name][line][repeat],
+                            results_dir=results_dir,
+                            load_metrics=True,
+                            load_model=False,
+                        )["metrics"]
+                    except Exception as e:
+                        if silent_fail:
+                            continue
+                        else:
+                            raise e
 
                     if metric_name == "train_base_objective":
                         vals = metrics.get(
@@ -158,10 +167,10 @@ def load_metric_grid(
                         m = m[0] + m[1]
                         vals = metrics.get(metric_name, metrics.get(m, []))
                     else:
-                        vals = metrics[metric_name]
-
+                        vals = utils.as_list(metrics[metric_name])
+                    
                     results_grid[row][metric_name][line][repeat] = processing_fn(
-                        np.array(vals),
+                        vals,
                         (row, metric_name, line, repeat),
                     )
 
@@ -201,7 +210,7 @@ def compute_metrics(
                     vals = metric_grid[row][metric_name][line][repeat]
 
                     results.append(vals)
-
+                
                 results_grid[row][metric_name][line] = metric_fn(
                     results, keys=repeats, metric_name=metric_name
                 )
@@ -236,6 +245,7 @@ def load_and_clean_experiments(
     ] = [],
     x_key: Optional[str] = None,
     x_vals: Optional[Union[List, np.ndarray]] = None,
+    silent_fail: bool = False,
 ):
     """Load and clean a grid of experiments according to the past parameters.
     This is a convenience function which composes other built-ins.
@@ -244,7 +254,7 @@ def load_and_clean_experiments(
     :param metrics: list of strings identifying different metrics.
     :param row_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different rows.
     :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different lines.
-    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be *averaged* over in the plot.
+    :param repeat_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be *averaged* over in the plot.
     :param metric_fn: (optional) function to process metrics after they are loaded.
     :param keep: A list of key-value pairs to retain with the form `[(key, values)]`. Each `key` is either a singleton
         key for the top-level dictionary or an iterable of keys indexing into nested dictionaries. `values` is either
@@ -287,6 +297,7 @@ def load_and_clean_experiments(
         exp_grid,
         results_dir,
         processing_fn=call_on_fn,
+        silent_fail=silent_fail
     )
 
     if transform_fn is not None:

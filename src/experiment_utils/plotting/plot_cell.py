@@ -92,7 +92,7 @@ def make_error_bar_plot(
         if "x" in results[line]:
             x = results[line]["x"]
         else:
-            x = np.arange(len(y))
+            x = np.arange(len(y)) + 1
 
         y = results[line]["center"]
         ax.errorbar(

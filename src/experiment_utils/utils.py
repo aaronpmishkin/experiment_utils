@@ -171,6 +171,10 @@ def pad(array: Union[List, np.ndarray], length: int, value=None) -> np.ndarray:
 
     elif length < len(array):
         raise ValueError("'length' must be at least the length of 'array'!")
+    
+    if type(array) == list and type(array[0]) == list:
+        # handle recursive case
+        array = equalize_arrays(array)
 
     array_np = np.array(array)
     if value is None:
