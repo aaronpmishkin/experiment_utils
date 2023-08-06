@@ -2,17 +2,26 @@
 Command line helpers.
 """
 
-from typing import Tuple, List, Optional
+from __future__ import annotations
 from argparse import ArgumentParser, Namespace
 from warnings import warn
 
 # default experiment arguments
 
 
-def add_experiment_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
-    """Add default command line arguments for an experiment. By default, a new ArgumentParser is constructed and returned.
-    :param parser: (optional) parser to which the default arguments should be added.
-    :returns: parser with default arguments added.
+def add_experiment_arguments(
+    parser: ArgumentParser | None = None,
+) -> ArgumentParser:
+    """Add default command line arguments for an experiment.
+
+    By default, a new ArgumentParser is constructed and returned.
+
+    Params:
+        parser: (optional) parser to which the default arguments should be
+        added.
+
+    Returns:
+        parser - an ArgumentParser with default arguments added.
     """
     assert parser is None or isinstance(parser, ArgumentParser)
 
@@ -35,7 +44,10 @@ def add_experiment_arguments(parser: Optional[ArgumentParser] = None) -> Argumen
         "--debug",
         action="store_true",
         dest="debug",
-        help="Run in debug mode: exceptions end program execution and full stack-traces are printed.",
+        help=(
+            "Run in debug mode: exceptions end program execution and full"
+            " stack-traces are printed."
+        ),
     )
 
     # force re-run of experiment
@@ -138,16 +150,28 @@ def add_experiment_arguments(parser: Optional[ArgumentParser] = None) -> Argumen
         "--group_by_dataset",
         dest="group_by_dataset",
         action="store_true",
-        help="Whether or not to group the experiments by dataset. Incompatible with --nodes and --shuffle.",
+        help=(
+            "Whether or not to group the experiments by dataset. Incompatible"
+            " with --nodes and --shuffle."
+        ),
     )
 
     return parser
 
 
-def add_plotting_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
-    """Add default command line arguments for plotting an experiment. By default, a new ArgumentParser is constructed and returned.
-    :param parser: (optional) parser to which the default arguments should be added.
-    :returns: parser with default arguments added.
+def add_plotting_arguments(
+    parser: ArgumentParser | None = None,
+) -> ArgumentParser:
+    """Add default command line arguments for plotting an experiment.
+
+    By default, a new ArgumentParser is constructed and returned.
+
+    Params:
+        parser: (optional) parser to which the default arguments should be
+        added.
+
+    Returns:
+        parser - an ArgumentParser with default arguments added.
     """
     assert parser is None or isinstance(parser, ArgumentParser)
 
@@ -181,7 +205,10 @@ def add_plotting_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentP
         "--debug",
         action="store_true",
         dest="debug",
-        help="Run in debug mode: exceptions end program execution and full stack-traces are printed.",
+        help=(
+            "Run in debug mode: exceptions end program execution and full"
+            " stack-traces are printed."
+        ),
     )
 
     # location to save results
@@ -221,9 +248,9 @@ def add_plotting_arguments(parser: Optional[ArgumentParser] = None) -> ArgumentP
 
 
 def get_experiment_arguments(
-    parser: Optional[ArgumentParser] = None,
-) -> Tuple[
-    Tuple[
+    parser: ArgumentParser | None = None,
+) -> tuple[
+    tuple[
         str,
         str,
         str,
@@ -234,16 +261,27 @@ def get_experiment_arguments(
         str,
         bool,
         int,
-        List[int],
+        list[int],
         str,
         bool,
         bool,
     ],
-    Tuple[Namespace, List],
+    Namespace,
+    list,
 ]:
-    """Create and parse default experiment arguments from the command line. Default behavior is to create a new ArgumentParser object.
-    :param parser: (Optional) an ArgumentParser instance to which the default arguments should be added.
-    :returns: default arguments unpacked into a tuple, the parser, the arguments object, and an extra, unparsed arguments.
+    """Create and parse default experiment arguments from the command line.
+
+    Default behavior is to create a new ArgumentParser object.
+
+    Params:
+
+        parser: (Optional) an ArgumentParser instance to which the default
+        arguments should be added.
+
+    Returns:
+
+        Default arguments unpacked into a tuple, the arguments object, and an
+        extra, unparsed arguments.
     """
     assert parser is None or isinstance(parser, ArgumentParser)
 
@@ -254,17 +292,27 @@ def get_experiment_arguments(
     if len(extra) > 0:
         warn(f"Unknown command-line arguments {extra} encountered!")
 
-    return unpack_experiment_defaults(arguments), (arguments, extra)
+    return unpack_experiment_defaults(arguments), arguments, extra
 
 
 def get_plotting_arguments(
-    parser: Optional[ArgumentParser] = None,
-) -> Tuple[
-    Tuple[List[str], List[str], str, str, bool, bool, str], Tuple[Namespace, List]
+    parser: ArgumentParser | None = None,
+) -> tuple[
+    tuple[list[str], list[str], str, str, bool, bool, str],
+    Namespace,
+    list,
 ]:
-    """Create and parse default plotting arguments from the command line. Default behavior is to create a new ArgumentParser object.
-    :param parser: (Optional) an ArgumentParser instance to which the default arguments should be added.
-    :returns: default arguments unpacked into a tuple, the parser, the arguments object, and an extra, unparsed arguments.
+    """Create and parse default plotting arguments from the command line.
+
+    Default behavior is to create a new ArgumentParser object.
+
+    Params:
+        parser: (Optional) an ArgumentParser instance to which the default
+        arguments should be added.
+
+    Returns:
+        Default arguments unpacked into a tuple, the arguments object, and an
+        extra, unparsed arguments.
     """
     assert parser is None or isinstance(parser, ArgumentParser)
 
@@ -275,13 +323,26 @@ def get_plotting_arguments(
     if len(extra) > 0:
         warn(f"Unknown command-line arguments {extra} encountered!")
 
-    return unpack_plotting_defaults(arguments), (arguments, extra)
+    return unpack_plotting_defaults(arguments), arguments, extra
 
 
 def unpack_experiment_defaults(
     arguments: Namespace,
-) -> Tuple[
-    str, str, str, bool, bool, bool, bool, str, bool, int, List[int], str, bool, bool
+) -> tuple[
+    str,
+    str,
+    str,
+    bool,
+    bool,
+    bool,
+    bool,
+    str,
+    bool,
+    int,
+    list[int],
+    str,
+    bool,
+    bool,
 ]:
     return (
         arguments.exp_id,
@@ -303,7 +364,7 @@ def unpack_experiment_defaults(
 
 def unpack_plotting_defaults(
     arguments: Namespace,
-) -> Tuple[List[str], List[str], str, str, bool, bool, str]:
+) -> tuple[list[str], list[str], str, str, bool, bool, str]:
     return (
         arguments.exp_id,
         arguments.plot_name,

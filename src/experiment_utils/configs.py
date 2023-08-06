@@ -1,22 +1,31 @@
 """
 Utilities for working with experiment dictionaries.
 """
+
+from __future__ import annotations
 import os
 import hashlib
+from collections.abc import Callable, Iterator
 from collections import defaultdict
 from itertools import product
 from functools import reduce
 from copy import deepcopy
-from typing import Any, List, Tuple, Union, Optional, Callable, Iterator, cast, Dict
+from typing import Any, cast
 
-from experiment_utils.utils import as_list
+from .utils import as_list
 
 
-def hash_dict(exp_dict: Dict) -> str:
+def hash_dict(exp_dict: dict) -> str:
     """Hash an experiment dictionary into a unique id.
-    Can be used as a file-name. Adapted from Haven AI (https://github.com/haven-ai/haven-ai).
-    :param exp_dict: An experiment dictionary.
-    :returns: A unique id for the experiment
+
+    The resulting id is usually used as a file-name for saving experiments.
+    This strategy is adapted from
+    `Haven AI <https://github.com/haven-ai/haven-ai>`_
+    Params:
+        exp_dict: An experiment dictionary.
+
+    Returns:
+        A unique id for the experiment.
     """
     dict2hash = ""
     if not isinstance(exp_dict, dict):
@@ -35,11 +44,16 @@ def hash_dict(exp_dict: Dict) -> str:
     return hash_id
 
 
-def get_nested_value(exp_dict: Dict, key: Union[Tuple, Any]) -> Any:
-    """Access value in nested dictionary.
-    :param exp_dict: a (nested) dictionary.
-    :param key: a singleton or iterable of keys for the nested dictionary.
-    :returns: the value from the nested dictionary: `exp_dict[key[0]][key[1]...[key[-1]]`.
+def get_nested_value(exp_dict: dict, key: tuple | Any) -> Any:
+    """Access a value in nested dictionary using a tuple of keys.
+
+    Params:
+        exp_dict: a (nested) dictionary.
+        key: a singleton or iterable of keys for the nested dictionary.
+
+    Returns:
+        The value from the nested dictionary:
+        `exp_dict[key[0]][key[1]...[key[-1]]`.
     """
     key = as_list(key)
     value = exp_dict
@@ -49,14 +63,23 @@ def get_nested_value(exp_dict: Dict, key: Union[Tuple, Any]) -> Any:
     return value
 
 
-def expand_config(config: Union[Dict, Any], recurse: bool = True) -> List[Dict]:
-    """Expand an experiment configuration into a list of experiment dictionaries.
-    Inspired by Haven AI [https://github.com/haven-ai/haven-ai/]
-    :param config: A (nested) dictionary with options for the experiments to run.
-        Every list in the configuration is treated as a grid over which experiments are generated.
-        Use tuples (or some other iterable) to pass options which should not be expanded.
-    :param recurse: whether or not to expand nested dictionaries.
-    :returns: list of experiment dictionaries generated from `config`.
+def expand_config(config: dict | Any, recurse: bool = True) -> list[dict]:
+    """Expand an configuration dictionary into a list of experiments.
+
+    This function takes the Cartesian product of options from the config
+    dictionary to produce a list of experiments.  Inspired by
+    `Haven AI <https://github.com/haven-ai/haven-ai>`_
+
+    Params:
+        config: A (nested) dictionary with options for the experiments to run.
+            Every list in the configuration is treated as a grid over which
+            experiments are generated.  Use tuples (or some other iterable) to
+            pass options which should not be expanded.
+        recurse: whether or not to expand nested dictionaries to look for more
+            configuration options.
+
+    Returns:
+        List of experiment dictionaries generated from `config`.
     """
     if not isinstance(config, dict):
         return [config]
@@ -86,11 +109,16 @@ def expand_config(config: Union[Dict, Any], recurse: bool = True) -> List[Dict]:
     return exp_list
 
 
-def expand_config_list(config_list: List[Dict]) -> List[Dict]:
+def expand_config_list(config_list: list[dict]) -> list[dict]:
     """Convenience function for expanding a list of experiment configurations.
+
     See `expand_config` for details on the expansion operation.
-    :param config_list: list of configuration objects to expand.
-    :returns: the list of experiment dictionaries.
+
+    Params:
+        config_list: list of configuration objects to expand.
+
+    Returns:
+        The list of experiment dictionaries.
     """
 
     def expand_plus(acc, value):
@@ -100,24 +128,38 @@ def expand_config_list(config_list: List[Dict]) -> List[Dict]:
 
 
 def filter_dict_list(
-    dict_list: List[Dict],
-    keep: List[Tuple[Any, Any]] = [],
-    remove: List[Tuple[Any, Any]] = [],
-    filter_fn: Optional[Callable] = None,
-) -> List[Dict]:
+    dict_list: list[dict],
+    keep: list[tuple[Any, Any]] | None = None,
+    remove: list[tuple[Any, Any]] | None = None,
+    filter_fn: Callable | None = None,
+) -> list[dict]:
     """Filter list of (nested) dictionaries based on key-value pairs.
-    :param dict_list: A list of dictionary objects. Each dictionary object may be composed of nested dictionaries.
-    :param keep: A list of key-value pairs to retain with the form `[(key, values)]`. Each `key` is either a singleton
-        key for the top-level dictionary or an iterable of keys indexing into nested dictionaries. `values` is either
-        singleton or list of values.
-    :param remove: A list of key-value pairs to filter with the form `[(key, values)]`. Arguments should taken the same
-        form as `keep`.
-    :param filter_fn: (optional) An additional filter to run on each dictionary.
-    :returns: Filtered list of dictionaries.
+
+    Params:
+        dict_list: A list of dictionary objects. Each dictionary object may
+            be composed of nested dictionaries.
+        keep: A list of key-value pairs to retain with the form
+            `[(key, values)]`. Each `key` is either a singleton key for the
+            top-level dictionary or an iterable of keys indexing into nested
+            dictionaries, while `values` is either singleton or list of values.
+        remove: A list of key-value pairs to filter with the form
+            `[(key, values)]`. Arguments should taken the same form as `keep`.
+        filter_fn: (optional) An additional filter to run on each dictionary.
+
+    Returns:
+        Filtered list of dictionaries.
 
     """
 
-    keys_to_check = list(zip(keep + remove, [True] * len(keep) + [False] * len(remove)))
+    if keep is None:
+        keep = []
+
+    if remove is None:
+        remove = []
+
+    keys_to_check = list(
+        zip(keep + remove, [True] * len(keep) + [False] * len(remove))
+    )
 
     def key_filter(exp_dict):
         keep = True
@@ -127,7 +169,7 @@ def filter_dict_list(
 
             try:
                 exp_value = get_nested_value(exp_dict, key)
-            except:
+            except KeyError:
                 continue
 
             # keep or filter the experiment
@@ -150,25 +192,37 @@ def filter_dict_list(
 
 
 def make_grid(
-    exp_list: List[Dict],
-    row_key: Union[Any, Iterator[Any]],
-    col_key: Union[Any, Iterator[Any]],
-    line_key: Union[Any, Iterator[Any]],
-    repeat_key: Union[Any, Iterator[Any]],
-) -> Dict:
-    """Convert an experiment list of into grid of experiment dictionaries in preparation for plotting.
-    :param exp_list: list of experiment dictionaries. These should be expanded and filtered.
-    :param row_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different rows.
-    :param col_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different columns.
-    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different lines.
-    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be *averaged* over in the plot.
-    :returns: a nested dictionary whose first level is indexed by the unique values found at 'row_key', the second by the values at 'col_key', and the third by values at 'line_key'.
+    exp_list: list[dict],
+    row_key: Any | Iterator[Any],
+    col_key: Any | Iterator[Any],
+    line_key: Any | Iterator[Any],
+    repeat_key: Any | Iterator[Any],
+) -> dict:
+    """Convert an experiment list of into grid of experiment dictionaries.
+
+    The grid of experiment dictionaries is organized in a hierarchy as
+    rows -> columns -> lines -> repeats in preparation for plotting.
+
+    Params:
+        exp_list: list of experiment dictionaries.
+        row_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different rows.
+        col_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different columns.
+        line_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different lines.
+        repeat_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be *averaged* over in the plot.
+
+    Returns:
+        A nested dictionary whose first level is indexed by the unique values
+        found at `row_key`, the second by the values at `col_key`, the
+        third by values at `line_key`, and the last by `row_key`.
 
     """
     grid: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
     for exp_dict in exp_list:
-
         row_val = (
             row_key(exp_dict)
             if callable(row_key)
@@ -193,7 +247,11 @@ def make_grid(
         # do *not* silently overwrite other experiments.
         if repeat_val in grid[row_val][col_key][line_val]:
             raise ValueError(
-                f"Two experiment dicts match the same key-set: \n {grid[row_val][col_key][line_val][repeat_val]}, \n \n {exp_dict}."
+                (
+                    f"Two experiment dicts match the same key-set: \n"
+                    f"{grid[row_val][col_key][line_val][repeat_val]}, \n\n"
+                    f"{exp_dict}."
+                )
             )
 
         grid[row_val][col_val][line_val][repeat_val] = exp_dict
@@ -202,25 +260,38 @@ def make_grid(
 
 
 def make_metric_grid(
-    exp_list: List[Dict],
-    metrics: List[str],
-    row_key: Union[Any, Iterator[Any]],
-    line_key: Union[Any, Iterator[Any]],
-    repeat_key: Union[Any, Iterator[Any]],
-) -> Dict:
-    """Convert an experiment list of into grid of experiment dictionaries in preparation for plotting.
-    :param exp_list: list of experiment dictionaries. These should be expanded and filtered.
-    :param metrics: list of strings identifying different metrics.
-    :param row_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different rows.
-    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be split into different lines.
-    :param line_key: key (or iterable of keys) for which distinct values in the experiment dictionaries are to be *averaged* over in the plot.
-    :returns: a nested dictionary whose first level is indexed by the unique values found at 'row_key', the second by the values at 'col_key', and the third by values at 'line_key'.
+    exp_list: list[dict],
+    metrics: list[str],
+    row_key: Any | Iterator[Any],
+    line_key: Any | Iterator[Any],
+    repeat_key: Any | Iterator[Any],
+) -> dict:
+    """Convert an experiment list of into grid of experiment dictionaries.
+
+    The difference between `make_metric_grid` and `make_grid` is where the
+    values for columns are found. In this function, the unique columns come
+    from the list of metrics while `make_grid` creates finds the columns from
+    the unique values at `column_key` int he experiment dictionaries.
+
+    Params:
+        exp_list: list of experiment dictionaries.
+        metrics: list of strings identifying different metrics.
+        row_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different rows.
+        line_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different lines.
+        repeat_key: key (or iterable of keys) for which distinct values in the
+        experiment dictionaries are to be *averaged* over in the plot.
+
+    Returns:
+        A nested dictionary whose first level is indexed by the unique values
+        found at `row_key`, the second by the values from `metrics` and the
+        third by values at `line_key`.
 
     """
     grid: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
     for exp_dict, metric_name in product(exp_list, metrics):
-
         row_val = (
             row_key(exp_dict)
             if callable(row_key)
@@ -240,7 +311,11 @@ def make_metric_grid(
         # do *not* silently overwrite other experiments.
         if repeat_val in grid[row_val][metric_name][line_val]:
             raise ValueError(
-                f"Two experiment dicts match the same key-set: \n {grid[row_val][metric_name][line_val][repeat_val]}, \n \n {exp_dict}."
+                (
+                    f"Two experiment dicts match the same key-set: \n"
+                    f"{grid[row_val][metric_name][line_val][repeat_val]}, \n\n"
+                    f"{exp_dict}."
+                )
             )
 
         grid[row_val][metric_name][line_val][repeat_val] = exp_dict
@@ -248,11 +323,14 @@ def make_metric_grid(
     return grid
 
 
-def merge_grids(exp_grids: List[Dict]) -> Dict:
+def merge_grids(exp_grids: list[dict]) -> dict:
     """Merge a list of metric grids.
-    :param exp_grids: a list of experiment grids with layers of keys,
-        (row, col, line).
-    :returns: a merged experiment grid.
+
+    Params:
+        exp_grids: a list of experiment grids with layers of keys,
+        (row, col, line, repeat).
+    Returns:
+        A merged experiment grid.
     """
 
     base_grid = deepcopy(exp_grids[0])
@@ -262,18 +340,23 @@ def merge_grids(exp_grids: List[Dict]) -> Dict:
                 for line in grid[row][col].keys():
                     if line in base_grid[row][col][line]:
                         raise ValueError(
-                            f"Two experiment dicts match the same key-set: \n {grid[row][col][line]}, \n \n {base_grid[row][col][line]}."
+                            (
+                                f"Two experiment dicts match the same key-set:"
+                                f"\n {grid[row][col][line]}, \n \n"
+                                f"{base_grid[row][col][line]}."
+                            )
                         )
-                    else:
-                        base_grid[row][col][line] = grid[row][col][line]
+                    base_grid[row][col][line] = grid[row][col][line]
 
     return base_grid
 
 
-def call_on_grid(exp_grid: Dict, call_fn: Callable) -> Dict:
+def call_on_grid(exp_grid: dict, call_fn: Callable) -> dict:
     """Call 'call_fn' on the values stored in the leafs of an experiment grid.
-    :param exp_grid: a grid of experiments such as generated by 'make_grid'.
-    :param call_fn: the function to call on each leaf value.
+
+    Params:
+        exp_grid: a grid of experiments such as generated by 'make_grid'.
+        call_fn: the function to call on each leaf value.
     :returns: a new experiment grid.
     """
 
@@ -283,7 +366,8 @@ def call_on_grid(exp_grid: Dict, call_fn: Callable) -> Dict:
             for line in exp_grid[row][col].keys():
                 for repeat in exp_grid[row][col][line].keys():
                     new_grid[row][col][line][repeat] = call_fn(
-                        exp_grid[row][col][line][repeat], (row, col, line, repeat)
+                        exp_grid[row][col][line][repeat],
+                        (row, col, line, repeat),
                     )
 
     return new_grid
