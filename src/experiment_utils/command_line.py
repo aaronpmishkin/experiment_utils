@@ -117,15 +117,15 @@ def add_experiment_arguments(
         help="Number of nodes on which to run the experiment.",
     )
 
-    # specific experiment indices to run.
+    # specific task index for running sbatch array jobs.
     parser.add_argument(
         "-I",
-        "--indices",
+        "--index",
         nargs="*",
         type=int,
-        dest="indices",
+        dest="index",
         default=None,
-        help="Indices of specific experiments to run.",
+        help="Index of specific experiment block to run.",
     )
 
     # sbatch file to use when submitting the job.
@@ -143,17 +143,6 @@ def add_experiment_arguments(
         dest="shuffle",
         action="store_true",
         help="Whether or not to shuffle the experiment order before running.",
-    )
-
-    # group experiments by dataset
-    parser.add_argument(
-        "--group_by_dataset",
-        dest="group_by_dataset",
-        action="store_true",
-        help=(
-            "Whether or not to group the experiments by dataset. Incompatible"
-            " with --nodes and --shuffle."
-        ),
     )
 
     return parser
@@ -261,9 +250,8 @@ def get_experiment_arguments(
         str,
         bool,
         int,
-        list[int],
+        int,
         str,
-        bool,
         bool,
     ],
     Namespace,
@@ -339,9 +327,8 @@ def unpack_experiment_defaults(
     str,
     bool,
     int,
-    list[int],
+    int,
     str,
-    bool,
     bool,
 ]:
     return (
@@ -355,10 +342,9 @@ def unpack_experiment_defaults(
         arguments.log_file,
         arguments.timed,
         arguments.nodes,
-        arguments.indices,
+        arguments.index,
         arguments.sbatch,
         arguments.shuffle,
-        arguments.group_by_dataset,
     )
 
 
