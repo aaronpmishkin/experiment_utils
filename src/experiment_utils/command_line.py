@@ -262,12 +262,10 @@ def get_experiment_arguments(
     Default behavior is to create a new ArgumentParser object.
 
     Params:
-
         parser: (Optional) an ArgumentParser instance to which the default
         arguments should be added.
 
     Returns:
-
         Default arguments unpacked into a tuple, the arguments object, and an
         extra, unparsed arguments.
     """
