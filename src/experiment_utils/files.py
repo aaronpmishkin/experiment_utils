@@ -242,7 +242,7 @@ def compute_metrics(
                     results.append(vals)
 
                 results_grid[row][metric_name][line] = metric_fn(
-                    results, keys=repeats, metric_name=metric_name
+                    results, metric_name=metric_name
                 )
 
         if x_key is not None or x_vals is not None:

@@ -191,7 +191,6 @@ if __name__ == "__main__":
             logger.warning(
                 f"Running Experiment: {i+1}/{len(experiment_list)}."
             )
-            logger.info(f"Method: {exp_dict['method']['name']}")
 
             # prevent a single failure from crashing all experiments.
             try:
