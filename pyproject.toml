@@ -8,7 +8,7 @@ version = "0.0.5-beta"
 authors = [
   { name="Aaron Mishkin", email="amishkin@cs.stanford.edu" },
 ]
-description="A lightweight package for managing optimization and machine learning experiments.",
+description="A lightweight package for managing optimization and machine learning experiments."
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
@@ -30,4 +30,3 @@ scnn = ["py.typed"]
 [project.urls]
 "Homepage" = "https://github.com/aaronpmishkin/experiment_utils"
 "Bug Tracker" = "https://github.com/aaronpmishkin/experiment_utils/issues"
-
