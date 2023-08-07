@@ -9,21 +9,25 @@ from experiment_utils import configs, utils, files, command_line
 from experiment_utils.plotting import plot_grid, plot_cell, defaults
 
 # merge experiment dictionaries.
-from .exp_configs import EXPERIMENTS
-from .plot_configs import PLOTS
+from exp_configs import EXPERIMENTS
+from plot_configs import PLOTS
 
 # Script #
 
 if __name__ == "__main__":
     (
-        exp_ids,
-        plot_names,
-        figures_dir,
-        results_dir_base,
-        verbose,
-        debug,
-        log_file,
-    ), _ = command_line.get_plotting_arguments()
+        (
+            exp_ids,
+            plot_names,
+            figures_dir,
+            results_dir_base,
+            verbose,
+            debug,
+            log_file,
+        ),
+        _,
+        _,
+    ) = command_line.get_plotting_arguments()
 
     logger_name = reduce(lambda acc, x: f"{acc}{x}_", exp_ids, "")
     logger = utils.get_logger(logger_name, verbose, debug, log_file)

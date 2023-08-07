@@ -11,7 +11,7 @@ from logging import Logger
 import numpy as np
 
 from experiment_utils import experiments, configs, command_line, utils
-from .exp_configs import EXPERIMENTS  # type: ignore
+from exp_configs import EXPERIMENTS  # type: ignore
 
 
 # ====== REPLACE ======#
