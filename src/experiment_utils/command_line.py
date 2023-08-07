@@ -121,7 +121,6 @@ def add_experiment_arguments(
     parser.add_argument(
         "-I",
         "--index",
-        nargs="*",
         type=int,
         dest="index",
         default=None,
@@ -283,11 +282,7 @@ def get_experiment_arguments(
 
 def get_plotting_arguments(
     parser: ArgumentParser | None = None,
-) -> tuple[
-    tuple[list[str], list[str], str, str, bool, bool, str],
-    Namespace,
-    list,
-]:
+) -> tuple[tuple[list[str], list[str], str, str, bool, bool, str], Namespace, list,]:
     """Create and parse default plotting arguments from the command line.
 
     Default behavior is to create a new ArgumentParser object.
@@ -314,21 +309,7 @@ def get_plotting_arguments(
 
 def unpack_experiment_defaults(
     arguments: Namespace,
-) -> tuple[
-    str,
-    str,
-    str,
-    bool,
-    bool,
-    bool,
-    bool,
-    str,
-    bool,
-    int,
-    int,
-    str,
-    bool,
-]:
+) -> tuple[str, str, str, bool, bool, bool, bool, str, bool, int, int, str, bool,]:
     return (
         arguments.exp_id,
         arguments.data_dir,
