@@ -10,7 +10,7 @@ from collections.abc import Callable
 
 import matplotlib.pyplot as plt  # type: ignore
 
-from .defaults import DEFAULT_SETTINGS
+from .defaults import DEFAULT_SETTINGS, get_default_line_kwargs
 
 
 def try_cell_row_col(
@@ -117,9 +117,7 @@ def plot_grid(
 
         # in the top row
         if settings.get("col_titles", False) and i < len(cols):
-            ax.set_title(
-                col_titles.get(col, ""), fontsize=settings["subtitle_fs"]
-            )
+            ax.set_title(col_titles.get(col, ""), fontsize=settings["subtitle_fs"])
 
         if settings.get("row_titles", False) and i % len(cols) == 0:
             ax.annotate(
@@ -135,13 +133,8 @@ def plot_grid(
             )
 
         # start of a new row
-        if (
-            settings.get("y_labels", False) == "left_col"
-            and i % len(cols) == 0
-        ):
-            ax.set_ylabel(
-                y_labels.get(row, ""), fontsize=settings["axis_labels_fs"]
-            )
+        if settings.get("y_labels", False) == "left_col" and i % len(cols) == 0:
+            ax.set_ylabel(y_labels.get(row, ""), fontsize=settings["axis_labels_fs"])
         elif settings.get("y_labels", False) == "every_col":
             ax.set_ylabel(
                 try_cell_row_col(y_labels, row, col, ""),
@@ -153,9 +146,7 @@ def plot_grid(
             settings.get("x_labels", False) == "bottom_row"
             and len(cols) * (len(rows) - 1) <= i
         ):
-            ax.set_xlabel(
-                x_labels.get(col, ""), fontsize=settings["axis_labels_fs"]
-            )
+            ax.set_xlabel(x_labels.get(col, ""), fontsize=settings["axis_labels_fs"])
         elif settings.get("x_labels", False) == "every_row":
             ax.set_xlabel(
                 try_cell_row_col(x_labels, row, col, ""),
@@ -180,7 +171,12 @@ def plot_grid(
                 ax.yticks(y_ticks)
 
         # plot the cell
-        plot_fn(ax, results[row][col], line_kwargs, settings)
+        local_line_kwargs = line_kwargs
+        lines = results[row][col]
+        if line_kwargs is None:
+            local_line_kwargs = get_default_line_kwargs(lines)
+
+        plot_fn(ax, lines, local_line_kwargs, settings)
 
         # log-scale:
         if try_cell_row_col(log_scale, row, col, None) is not None:

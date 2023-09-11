@@ -16,9 +16,7 @@ from .files import save_experiment
 def run_or_load(
     logger: Logger,
     exp_dict: dict,
-    run_fn: Callable[
-        [Logger, dict[str, Any], str], tuple[Any, Any, dict[str, Any]]
-    ],
+    run_fn: Callable[[Logger, dict[str, Any], str], tuple[Any, Any, dict[str, Any]]],
     data_dir: str = "data",
     results_dir: str = "results",
     force_rerun: bool = False,
@@ -64,3 +62,17 @@ def run_or_load(
             save_experiment(exp_dict, results_dir, results, metrics, model)
 
     return results
+
+
+def filter_experiment_list(experiment_list, results_dir, force_rerun=False):
+    filtered_list = []
+
+    for exp_dict in experiment_list:
+        path = os.path.join(results_dir, hash_dict(exp_dict), "metrics.pkl")
+
+        if os.path.exists(path) and not force_rerun:
+            continue
+
+        filtered_list.append(exp_dict)
+
+    return filtered_list

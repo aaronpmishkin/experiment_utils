@@ -33,16 +33,6 @@ def run_experiment(logger: Logger, exp_dict: dict, data_dir: str):
 # ======================#
 
 
-def compute_dataset_blocks(exp_list):
-    dataset_blocks = defaultdict(list)
-
-    for i, exp_config in enumerate(exp_list):
-        dataset_name = exp_config["data"]["name"]
-        dataset_blocks[dataset_name].append(i)
-
-    return list(dataset_blocks.values())
-
-
 def compute_index_blocks(nodes, exp_list):
     n = len(exp_list)
     indices = list(range(n))
@@ -125,13 +115,15 @@ if __name__ == "__main__":
 
     # lookup experiment #
     if exp_id not in EXPERIMENTS:
-        raise ValueError(
-            f"Experiment id {exp_id} is not in the experiment list!"
-        )
+        raise ValueError(f"Experiment id {exp_id} is not in the experiment list!")
     config = EXPERIMENTS[exp_id]
     logger.warning(f"\n\n====== Running {exp_id} ======\n")
 
     experiment_list = configs.expand_config_list(config)
+
+    experiment_list = experiments.filter_experiment_list(
+        experiment_list, results_dir, force_rerun
+    )
 
     # avoid clustering hard experiments during array jobs!
     if shuffle:
@@ -142,10 +134,7 @@ if __name__ == "__main__":
         # Break experiment up across desired number of nodes.
         if sbatch is None:
             raise ValueError(
-                (
-                    "An sbatch file must be specified when "
-                    "running on multiple nodes!"
-                )
+                ("An sbatch file must be specified when " "running on multiple nodes!")
             )
 
         # run sub-processes to batch submit the experiments.
@@ -188,9 +177,7 @@ if __name__ == "__main__":
         results_dir = os.path.join(results_dir, exp_id)
         for i, exp_dict in enumerate(experiment_list):
             num_repeats = 10
-            logger.warning(
-                f"Running Experiment: {i+1}/{len(experiment_list)}."
-            )
+            logger.warning(f"Running Experiment: {i+1}/{len(experiment_list)}.")
 
             # prevent a single failure from crashing all experiments.
             try:

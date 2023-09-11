@@ -60,9 +60,26 @@ line_colors = [
 
 # default line-style is solid.
 line_styles = [
-    "-",
-    "-.",
-    "--",
+    "solid",
+    "dashed",
+    "dashdot",
+    "dotted",
 ]
 # default marker styles.
 marker_styles = ["o", "s", "v", "x", "D", "^", "D", "p", "o", "x", "s"]
+
+
+def get_default_line_kwargs(lines):
+    line_kwargs = {}
+    for i, line in enumerate(lines):
+        line_kwargs[line] = {
+            "c": line_colors[i % len(line_colors)],
+            "label": line,
+            "linewidth": 3,
+            "marker": marker_styles[i % len(marker_styles)],
+            "markevery": 0.1,
+            "markersize": 8,
+            "linestyle": line_styles[i // len(line_colors)],
+        }
+
+    return line_kwargs
