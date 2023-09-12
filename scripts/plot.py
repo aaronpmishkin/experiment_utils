@@ -62,6 +62,9 @@ if __name__ == "__main__":
                 row_key=plot_config["row_key"],
                 line_key=plot_config["line_key"],
                 repeat_key=plot_config["repeat_key"],
+                variation_key=plot_config["variation_key"],
+                target_metric=plot_config.get("target_metric", None),
+                maximize_target=plot_config.get("maximize_target", False),
                 metric_fn=plot_config["metrics_fn"],
                 keep=plot_config.get("keep", []),
                 remove=plot_config.get("remove", []),
@@ -70,6 +73,7 @@ if __name__ == "__main__":
                 processing_fns=plot_config.get("processing_fns", None),
                 x_key=plot_config.get("x_key", None),
                 x_vals=plot_config.get("x_vals", None),
+                silent_fail=plot_config.get("silent_fail", False),
             )
 
             plot_grid.plot_grid(

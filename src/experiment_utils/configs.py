@@ -157,9 +157,7 @@ def filter_dict_list(
     if remove is None:
         remove = []
 
-    keys_to_check = list(
-        zip(keep + remove, [True] * len(keep) + [False] * len(remove))
-    )
+    keys_to_check = list(zip(keep + remove, [True] * len(keep) + [False] * len(remove)))
 
     def key_filter(exp_dict):
         keep = True
@@ -197,6 +195,7 @@ def make_grid(
     col_key: Any | Iterator[Any],
     line_key: Any | Iterator[Any],
     repeat_key: Any | Iterator[Any],
+    variation_key: Any | Iterator[Any],
 ) -> dict:
     """Convert an experiment list of into grid of experiment dictionaries.
 
@@ -213,14 +212,19 @@ def make_grid(
             experiment dictionaries are to be split into different lines.
         repeat_key: key (or iterable of keys) for which distinct values in the
             experiment dictionaries are to be *averaged* over in the plot.
+        variation_key: key (or iterable of keys) for for which distinct values
+            in the experiment dictionaries are to be optimized over.
 
     Returns:
         A nested dictionary whose first level is indexed by the unique values
         found at `row_key`, the second by the values at `col_key`, the
-        third by values at `line_key`, and the last by `row_key`.
+        third by values at `line_key`, the fourth by `repeat_key`, and the last
+        by `variation_key`.
 
     """
-    grid: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    grid: dict = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    )
 
     for exp_dict in exp_list:
         row_val = (
@@ -243,18 +247,23 @@ def make_grid(
             if callable(repeat_key)
             else get_nested_value(exp_dict, repeat_key)
         )
+        optimize_val = (
+            variation_key(exp_dict)
+            if callable(variation_key)
+            else get_nested_value(exp_dict, variation_key)
+        )
 
         # do *not* silently overwrite other experiments.
-        if repeat_val in grid[row_val][col_key][line_val]:
+        if optimize_val in grid[row_val][col_key][line_val][repeat_val]:
             raise ValueError(
                 (
                     f"Two experiment dicts match the same key-set: \n"
-                    f"{grid[row_val][col_key][line_val][repeat_val]}, \n\n"
+                    f"{grid[row_val][col_key][line_val][repeat_val][optimize_val]}, \n\n"
                     f"{exp_dict}."
                 )
             )
 
-        grid[row_val][col_val][line_val][repeat_val] = exp_dict
+        grid[row_val][col_val][line_val][repeat_val][optimize_val] = exp_dict
 
     return grid
 
@@ -265,13 +274,14 @@ def make_metric_grid(
     row_key: Any | Iterator[Any],
     line_key: Any | Iterator[Any],
     repeat_key: Any | Iterator[Any],
+    variation_key: Any | Iterator[Any],
 ) -> dict:
     """Convert an experiment list of into grid of experiment dictionaries.
 
     The difference between `make_metric_grid` and `make_grid` is where the
     values for columns are found. In this function, the unique columns come
     from the list of metrics while `make_grid` creates finds the columns from
-    the unique values at `column_key` int he experiment dictionaries.
+    the unique values at `column_key` in the experiment dictionaries.
 
     Params:
         exp_list: list of experiment dictionaries.
@@ -282,14 +292,19 @@ def make_metric_grid(
             experiment dictionaries are to be split into different lines.
         repeat_key: key (or iterable of keys) for which distinct values in the
         experiment dictionaries are to be *averaged* over in the plot.
+        variation_key: key (or iterable of keys) for for which distinct values
+            in the experiment dictionaries are to be optimized over.
 
     Returns:
         A nested dictionary whose first level is indexed by the unique values
-        found at `row_key`, the second by the values from `metrics` and the
-        third by values at `line_key`.
+        found at `row_key`, the second by the values from `metrics`, the
+        third by values at `line_key`, the fourth by values at `repeat_key`,
+        and the last by values at `variation_key`.
 
     """
-    grid: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    grid: dict = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    )
 
     for exp_dict, metric_name in product(exp_list, metrics):
         row_val = (
@@ -307,18 +322,23 @@ def make_metric_grid(
             if callable(repeat_key)
             else get_nested_value(exp_dict, repeat_key)
         )
+        optimize_val = (
+            variation_key(exp_dict)
+            if callable(variation_key)
+            else get_nested_value(exp_dict, variation_key)
+        )
 
         # do *not* silently overwrite other experiments.
-        if repeat_val in grid[row_val][metric_name][line_val]:
+        if optimize_val in grid[row_val][metric_name][line_val][repeat_val]:
             raise ValueError(
                 (
                     f"Two experiment dicts match the same key-set: \n"
-                    f"{grid[row_val][metric_name][line_val][repeat_val]}, \n\n"
+                    f"{grid[row_val][metric_name][line_val][repeat_val][optimize_val]}, \n\n"
                     f"{exp_dict}."
                 )
             )
 
-        grid[row_val][metric_name][line_val][repeat_val] = exp_dict
+        grid[row_val][metric_name][line_val][repeat_val][optimize_val] = exp_dict
 
     return grid
 

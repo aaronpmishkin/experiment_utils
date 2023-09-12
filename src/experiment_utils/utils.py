@@ -180,9 +180,7 @@ def equalize_arrays(
         An `np.ndarray` matrix obtained by stacking the equalized lists/arrays.
     """
     max_length = reduce(lambda acc, x: max(acc, len(x)), array_list, 0)
-    return np.array(
-        [pad(v, length=max_length, value=value) for v in array_list]
-    )
+    return np.array([pad(v, length=max_length, value=value) for v in array_list])
 
 
 def pad(array: list | np.ndarray, length: int, value=None) -> np.ndarray:
@@ -211,9 +209,7 @@ def pad(array: list | np.ndarray, length: int, value=None) -> np.ndarray:
     if value is None:
         value = array_np[-1]
 
-    return np.concatenate(
-        [array_np, np.repeat([value], length - len(array_np))]
-    )
+    return np.concatenate([array_np, np.repeat([value], length - len(array_np))])
 
 
 def normalize(filter_func: Callable):
@@ -279,9 +275,7 @@ def replace_x_axis(metric_grid):
                 repeats = metric_grid[row][metric_name][line].keys()
 
                 for x_key, repeat_key in repeats:
-                    vals = results_grid[row][metric_name][line][
-                        (x_key, repeat_key)
-                    ]
+                    vals = results_grid[row][metric_name][line][(x_key, repeat_key)]
 
                     results[repeat_key] = results.get(repeat_key, []) + [
                         (x_key, vals[-1])
@@ -290,10 +284,7 @@ def replace_x_axis(metric_grid):
                 # make sure the order is correct.
                 for key, val in results.items():
                     results[key] = np.array(
-                        [
-                            final
-                            for lam, final in sorted(val, key=lambda x: x[0])
-                        ]
+                        [final for lam, final in sorted(val, key=lambda x: x[0])]
                     )
 
                 results_grid[row][metric_name][line] = results

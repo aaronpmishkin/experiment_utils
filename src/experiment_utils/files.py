@@ -99,9 +99,7 @@ def load_experiment(
 
     if hash_id is None:
         if exp_dict is None:
-            raise ValueError(
-                "One of 'exp_dict' or 'hash_id' must not be 'None'."
-            )
+            raise ValueError("One of 'exp_dict' or 'hash_id' must not be 'None'.")
 
         hash_id = configs.hash_dict(exp_dict)
 
@@ -115,9 +113,7 @@ def load_experiment(
             break
 
     if not success:
-        raise ValueError(
-            f"Cannot find experiment {exp_dict} in one of {results_dir}!"
-        )
+        raise ValueError(f"Cannot find experiment {exp_dict} in one of {results_dir}!")
 
     try:
         with open(os.path.join(path, "return_value.pkl"), "rb") as f:
@@ -164,7 +160,9 @@ def load_metric_grid(
     """
 
     results_grid = deepcopy(grid)
-    results_grid = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    results_grid = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    )
 
     if processing_fn is None:
 
@@ -175,29 +173,70 @@ def load_metric_grid(
         for metric_name in grid[row].keys():
             for line in grid[row][metric_name].keys():
                 for repeat in grid[row][metric_name][line].keys():
-                    try:
-                        metrics = load_experiment(
-                            exp_dict=grid[row][metric_name][line][repeat],
-                            results_dir=results_dir,
-                            load_metrics=True,
-                            load_model=False,
-                        )["metrics"]
-                    except Exception as e:
-                        if silent_fail:
-                            continue
+                    for variation in grid[row][metric_name][line][repeat].keys():
+                        try:
+                            metrics = load_experiment(
+                                exp_dict=grid[row][metric_name][line][repeat][
+                                    variation
+                                ],
+                                results_dir=results_dir,
+                                load_metrics=True,
+                                load_model=False,
+                            )["metrics"]
+                        except Exception as e:
+                            if silent_fail:
+                                continue
 
-                        raise e
+                            raise e
 
-                    vals = utils.as_list(metrics[metric_name])
+                        vals = utils.as_list(metrics[metric_name])
 
-                    results_grid[row][metric_name][line][
-                        repeat
-                    ] = processing_fn(
-                        vals,
-                        (row, metric_name, line, repeat),
-                    )
+                        results_grid[row][metric_name][line][repeat][
+                            variation
+                        ] = processing_fn(
+                            vals,
+                            (row, metric_name, line, repeat, variation),
+                        )
 
     return results_grid
+
+
+def optimize_over_variations(
+    metric_grid: dict,
+    target_metric: str | None = None,
+    maximize_target: bool = False,
+) -> dict:
+    optimized_grid: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+
+    for row in metric_grid.keys():
+        for metric_name in metric_grid[row].keys():
+            for line in metric_grid[row][metric_name].keys():
+                for repeat in metric_grid[row][metric_name][line].keys():
+                    variations = list(
+                        metric_grid[row][metric_name][line][repeat].keys()
+                    )
+
+                    if target_metric is None:
+                        assert len(variations) == 1
+                        best_variation = variations[0]
+                    else:
+                        target_vals = [
+                            metric_grid[row][target_metric][line][repeat][var][-1]
+                            for var in variations
+                        ]
+
+                        index = (
+                            np.argmax(target_vals)
+                            if maximize_target
+                            else np.argmin(target_vals)
+                        )
+                        best_variation = variations[index]
+
+                    optimized_grid[row][metric_name][line][repeat] = metric_grid[row][
+                        metric_name
+                    ][line][repeat][best_variation]
+
+    return optimized_grid
 
 
 def compute_metrics(
@@ -249,9 +288,9 @@ def compute_metrics(
             for metric_name in metric_grid[row].keys():
                 for line in metric_grid[row][metric_name].keys():
                     if x_key is not None:
-                        results_grid[row][metric_name][line][
-                            "x"
-                        ] = results_grid[row][x_key][line]["center"]
+                        results_grid[row][metric_name][line]["x"] = results_grid[row][
+                            x_key
+                        ][line]["center"]
                     elif x_vals is not None:
                         results_grid[row][metric_name][line]["x"] = x_vals
 
@@ -265,7 +304,10 @@ def load_and_clean_experiments(
     row_key: Any | Iterator[Any],
     line_key: Any | Iterator[Any],
     repeat_key: Any | Iterator[Any],
+    variation_key: Any | Iterator[Any],
     metric_fn: Callable = utils.final_metrics,
+    target_metric: str | None = None,
+    maximize_target: bool = False,
     keep: list[tuple[Any, Any]] = [],
     remove: list[tuple[Any, Any]] = [],
     filter_fn: Callable | None = None,
@@ -331,7 +373,12 @@ def load_and_clean_experiments(
         metrics = metrics + [x_key]
 
     exp_grid = configs.make_metric_grid(
-        filtered_exp_list, metrics, row_key, line_key, repeat_key
+        filtered_exp_list,
+        metrics,
+        row_key,
+        line_key,
+        repeat_key,
+        variation_key,
     )
 
     def call_on_fn(exp, key):
@@ -344,6 +391,12 @@ def load_and_clean_experiments(
         results_dir,
         processing_fn=call_on_fn,
         silent_fail=silent_fail,
+    )
+
+    metric_grid = optimize_over_variations(
+        metric_grid,
+        target_metric,
+        maximize_target,
     )
 
     if transform_fn is not None:
