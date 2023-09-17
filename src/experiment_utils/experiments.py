@@ -70,9 +70,7 @@ def filter_experiment_list(experiment_list, results_dir, force_rerun=False):
     for exp_dict in experiment_list:
         path = os.path.join(results_dir, hash_dict(exp_dict), "metrics.pkl")
 
-        if os.path.exists(path) and not force_rerun:
-            continue
-
-        filtered_list.append(exp_dict)
+        if not os.path.exists(path) or force_rerun:
+            filtered_list.append(exp_dict)
 
     return filtered_list
