@@ -120,10 +120,11 @@ if __name__ == "__main__":
     logger.warning(f"\n\n====== Running {exp_id} ======\n")
 
     experiment_list = configs.expand_config_list(config)
-
-    experiment_list = experiments.filter_experiment_list(
-        experiment_list, results_dir, force_rerun
-    )
+    
+    # Warning: currently bugged!
+    # experiment_list = experiments.filter_experiment_list(
+    #     experiment_list, results_dir, force_rerun
+    # )
 
     # avoid clustering hard experiments during array jobs!
     if shuffle:
