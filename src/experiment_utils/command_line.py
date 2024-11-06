@@ -89,7 +89,14 @@ def add_experiment_arguments(
         "--verbose",
         action="store_true",
         dest="verbose",
-        help="Print logging information verbosely.",
+        help="Print experiment information verbosely.",
+    )
+    parser.add_argument(
+        "-VV",
+        "--verbose_all",
+        action="store_true",
+        dest="verbose_all",
+        help="Print all logging information verbosely.",
     )
     # log-file
     parser.add_argument(
@@ -140,8 +147,9 @@ def add_experiment_arguments(
     parser.add_argument(
         "--shuffle",
         dest="shuffle",
-        action="store_true",
-        help="Whether or not to shuffle the experiment order before running.",
+        action="store",
+        default=None,
+        help="Seed to use when randomizing the experiment order before running.",
     )
 
     return parser
@@ -246,6 +254,7 @@ def get_experiment_arguments(
         bool,
         bool,
         bool,
+        bool,
         str,
         bool,
         int,
@@ -282,7 +291,11 @@ def get_experiment_arguments(
 
 def get_plotting_arguments(
     parser: ArgumentParser | None = None,
-) -> tuple[tuple[list[str], list[str], str, str, bool, bool, str], Namespace, list,]:
+) -> tuple[
+    tuple[list[str], list[str], str, str, bool, bool, str],
+    Namespace,
+    list,
+]:
     """Create and parse default plotting arguments from the command line.
 
     Default behavior is to create a new ArgumentParser object.
@@ -309,7 +322,22 @@ def get_plotting_arguments(
 
 def unpack_experiment_defaults(
     arguments: Namespace,
-) -> tuple[str, str, str, bool, bool, bool, bool, str, bool, int, int, str, bool,]:
+) -> tuple[
+    str,
+    str,
+    str,
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    str,
+    bool,
+    int,
+    int,
+    str,
+    bool,
+]:
     return (
         arguments.exp_id,
         arguments.data_dir,
@@ -317,6 +345,7 @@ def unpack_experiment_defaults(
         arguments.force_rerun,
         arguments.save_results,
         arguments.verbose,
+        arguments.verbose_all,
         arguments.debug,
         arguments.log_file,
         arguments.timed,

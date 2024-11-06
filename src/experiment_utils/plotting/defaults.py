@@ -71,15 +71,17 @@ marker_styles = ["o", "s", "v", "x", "D", "^", "D", "p", "o", "x", "s"]
 
 def get_default_line_kwargs(lines):
     line_kwargs = {}
+    local_line_colors = line_colors[1:]
+    local_marker_styles = marker_styles[1:]
     for i, line in enumerate(lines):
         line_kwargs[line] = {
-            "c": line_colors[i % len(line_colors)],
+            "c": local_line_colors[i % len(local_line_colors)],
             "label": line,
             "linewidth": 3,
-            "marker": marker_styles[i % len(marker_styles)],
+            "marker": local_marker_styles[i % len(local_marker_styles)],
             "markevery": 0.1,
             "markersize": 8,
-            "linestyle": line_styles[i // len(line_colors)],
+            "linestyle": line_styles[i // len(local_line_colors)],
         }
 
     return line_kwargs

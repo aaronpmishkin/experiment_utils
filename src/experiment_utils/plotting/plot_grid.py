@@ -1,6 +1,7 @@
 """
 Utility for generating grids of plots.
 """
+
 from __future__ import annotations
 import os
 import math
@@ -47,6 +48,7 @@ def plot_grid(
     log_scale: dict = {},
     settings: dict = DEFAULT_SETTINGS,
     base_dir: str | None = None,
+    close: bool = True,
 ):
     """Generate a `len(rows)` x `len(cols)` grid of plots.
 
@@ -77,6 +79,7 @@ def plot_grid(
             See `defaults.DEFAULT_SETTINGS` above.
         base_dir: location to save plot. Defaults to 'None', in which case
             the plot is not saved.
+        close: whether or not to close the figure after plotting.
 
     Returns:
         Figure and dictionary of axis objects indexed by the rows and columns.
@@ -108,6 +111,7 @@ def plot_grid(
         figure_labels.get("row_titles", {}),
     )
     axes = {}
+    plt_lines = {}
 
     for i, (row, col) in enumerate(itertools.product(rows, cols)):
         ax = fig.add_subplot(spec[math.floor(i / len(cols)), i % len(cols)])
@@ -176,7 +180,7 @@ def plot_grid(
         if line_kwargs is None:
             local_line_kwargs = get_default_line_kwargs(lines)
 
-        plot_fn(ax, lines, local_line_kwargs, settings)
+        plt_lines[(row, col)] = plot_fn(ax, lines, local_line_kwargs, settings)
 
         # log-scale:
         if try_cell_row_col(log_scale, row, col, None) is not None:
@@ -238,6 +242,27 @@ def plot_grid(
         os.makedirs(head, exist_ok=True)
         plt.savefig(base_dir)
 
-    plt.close()
+    if close:
+        plt.close()
 
-    return fig, axes
+    return fig, axes, plt_lines
+
+
+def update_grid(
+    fig: plt.Figure,
+    axes: dict[Any, plt.Axes],
+    plt_lines: dict[Any, plt.Line2D],
+    update_plot_fn: Callable,
+    results: dict,
+):
+    rows = list(results.keys())
+    cols = list(results[rows[0]].keys())
+    artists = []
+
+    for i, (row, col) in enumerate(itertools.product(rows, cols)):
+        ax = axes[(row, col)]
+
+        # plot the cell
+        lines = results[row][col]
+        artists = artists + update_plot_fn(ax, lines, plt_lines[(row, col)])
+    return artists

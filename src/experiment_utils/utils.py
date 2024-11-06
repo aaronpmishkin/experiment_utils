@@ -1,6 +1,7 @@
 """
 Generic utilities.
 """
+
 from __future__ import annotations
 from copy import deepcopy
 from typing import Any
@@ -29,6 +30,27 @@ def as_list(x: Any) -> list[Any]:
         return x
     except TypeError:
         return [x]
+
+
+def defaultdict_to_dict(nested_dict: dict) -> dict:
+    """Convert nested defaultdict instance into nested dictionaries.
+
+    Params:
+        nested_dict: nested default dictionary object or ground item.
+
+    Returns:
+        Identical nested dictionary.
+    """
+
+    if not isinstance(nested_dict, dict):
+        return nested_dict
+
+    plain_dict = {}
+
+    for key, value in nested_dict.items():
+        plain_dict[key] = defaultdict_to_dict(value)
+
+    return plain_dict
 
 
 def quantile_metrics(
@@ -158,6 +180,36 @@ def final_metrics(
     metric_dict["center"] = np.array(center)
     metric_dict["upper"] = np.array(upper)
     metric_dict["lower"] = np.array(lower)
+
+    return metric_dict
+
+
+def final_vector_metrics(
+    metrics: list | dict | np.ndarray,
+    window: int = 1,
+    metric_name: str | None = None,
+) -> dict[str, np.ndarray]:
+    """Extract final vector metrics from each run.
+
+    Params:
+        metrics: a list, np.ndarray, or dictionary containing run metrics.
+        window: length of window over which to take the max, min, and median.
+        metric_name (optional):
+
+    Returns:
+        Dictionary object where the `upper`, `center` and `lower` keys index
+        the maximum, median, and minimum metric values over the window.
+    """
+    metric_dict = {}
+    metrics = np.array(metrics)
+    try:
+        metrics = metrics[:, -1, :]
+    except Exception as e:
+        return metric_dict
+
+    metric_dict["lower"] = np.quantile(metrics, 0.25, axis=0)
+    metric_dict["upper"] = np.quantile(metrics, 0.75, axis=0)
+    metric_dict["center"] = np.median(metrics, axis=0)
 
     return metric_dict
 
@@ -298,6 +350,7 @@ def replace_x_axis(metric_grid):
 def get_logger(
     name: str,
     verbose: bool = False,
+    verbose_all: bool = False,
     debug: bool = False,
     log_file: str | None = None,
 ) -> logging.Logger:
@@ -306,7 +359,9 @@ def get_logger(
     Params:
         name: name for the Logger instance.
         verbose: (optional) whether or not the logger should print verbosely
-            (ie. at the `INFO` level).
+            (ie. at the `WARNING` level).
+        verbose_all: (optional) whether or not the logger should print all
+        details verbosely (ie. at the `INFO` level).
         debug: (optional) whether or not the logger should print in debug mode
             (ie. at the `DEBUG` level).
         log_file: (optional) path to a file where the log should be stored. The
@@ -316,11 +371,15 @@ def get_logger(
         Instance of logging.Logger.
     """
 
-    level = logging.WARNING
+    level = logging.ERROR
+    if verbose:
+        level = logging.WARNING
+
+    if verbose_all:
+        level = logging.INFO
+
     if debug:
         level = logging.DEBUG
-    elif verbose:
-        level = logging.INFO
 
     logging.basicConfig(level=level, filename=log_file)
     logger = logging.getLogger(name)

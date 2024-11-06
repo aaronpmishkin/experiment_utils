@@ -16,7 +16,9 @@ from .files import save_experiment
 def run_or_load(
     logger: Logger,
     exp_dict: dict,
-    run_fn: Callable[[Logger, dict[str, Any], str], tuple[Any, Any, dict[str, Any]]],
+    run_fn: Callable[
+        [Logger, dict[str, Any], str, str], tuple[Any, Any, dict[str, Any]]
+    ],
     data_dir: str = "data",
     results_dir: str = "results",
     force_rerun: bool = False,
@@ -52,6 +54,7 @@ def run_or_load(
             logger,
             exp_dict,
             data_dir,
+            results_dir,
         )
 
         logger.info("Complete.")
