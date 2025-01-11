@@ -190,6 +190,7 @@ def load_metric_grid(
                             raise e
 
                         vals = utils.as_list(metrics[metric_name])
+                        vals = np.nan_to_num(vals, nan=0)
 
                         results_grid[row][metric_name][line][repeat][
                             variation
@@ -224,6 +225,7 @@ def optimize_over_variations(
                             metric_grid[row][target_metric][line][repeat][var][-1]
                             for var in variations
                         ]
+                        target_vals = np.nan_to_num(target_vals, nan=np.inf)
 
                         index = (
                             np.argmax(target_vals)
