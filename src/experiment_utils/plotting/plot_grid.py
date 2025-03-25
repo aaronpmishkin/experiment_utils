@@ -1,6 +1,7 @@
 """
 Utility for generating grids of plots.
 """
+
 from __future__ import annotations
 import os
 import math
@@ -82,6 +83,7 @@ def plot_grid(
         Figure and dictionary of axis objects indexed by the rows and columns.
     """
     rows = list(results.keys())
+    rows.reverse()
     cols = list(results[rows[0]].keys())
 
     fig = plt.figure(
@@ -108,96 +110,104 @@ def plot_grid(
         figure_labels.get("row_titles", {}),
     )
     axes = {}
+    i = 0
+    for row in rows:
+        for col in results[row].keys():
+            ax = fig.add_subplot(spec[math.floor(i / len(cols)), i % len(cols)])
+            # dict of axes objects
+            axes[(row, col)] = ax
+            ax.yaxis.offsetText.set_fontsize(settings["offest_text_fs"])
 
-    for i, (row, col) in enumerate(itertools.product(rows, cols)):
-        ax = fig.add_subplot(spec[math.floor(i / len(cols)), i % len(cols)])
-        # dict of axes objects
-        axes[(row, col)] = ax
-        ax.yaxis.offsetText.set_fontsize(settings["offest_text_fs"])
+            # in the top row
+            if settings.get("col_titles", False) == "every_cell":
+                ax.set_title(col_titles.get(col, ""), fontsize=settings["subtitle_fs"])
+            elif settings.get("col_titles", False) and i < len(cols):
+                ax.set_title(col_titles.get(col, ""), fontsize=settings["subtitle_fs"])
 
-        # in the top row
-        if settings.get("col_titles", False) and i < len(cols):
-            ax.set_title(col_titles.get(col, ""), fontsize=settings["subtitle_fs"])
+            if settings.get("row_titles", False) and i % len(cols) == 0:
+                ax.annotate(
+                    row_titles.get(row, ""),
+                    xy=(0, 0.5),
+                    xytext=(-ax.yaxis.labelpad - settings["row_title_pad"], 0),
+                    xycoords=ax.yaxis.label,
+                    textcoords="offset points",
+                    fontsize=settings["subtitle_fs"],
+                    ha="right",
+                    va="center",
+                    rotation=90,
+                )
 
-        if settings.get("row_titles", False) and i % len(cols) == 0:
-            ax.annotate(
-                row_titles.get(row, ""),
-                xy=(0, 0.5),
-                xytext=(-ax.yaxis.labelpad - settings["row_title_pad"], 0),
-                xycoords=ax.yaxis.label,
-                textcoords="offset points",
-                fontsize=settings["subtitle_fs"],
-                ha="right",
-                va="center",
-                rotation=90,
+            # start of a new row
+            if settings.get("y_labels", False) == "left_col" and i % len(cols) == 0:
+                ax.set_ylabel(
+                    y_labels.get(row, ""), fontsize=settings["axis_labels_fs"]
+                )
+            elif settings.get("y_labels", False) == "every_col":
+                ax.set_ylabel(
+                    try_cell_row_col(y_labels, row, col, ""),
+                    fontsize=settings["axis_labels_fs"],
+                )
+
+            # in the bottom row
+            if (
+                settings.get("x_labels", False) == "bottom_row"
+                and len(cols) * (len(rows) - 1) <= i
+            ):
+                ax.set_xlabel(
+                    x_labels.get(col, ""), fontsize=settings["axis_labels_fs"]
+                )
+            elif settings.get("x_labels", False) == "every_row":
+                ax.set_xlabel(
+                    try_cell_row_col(x_labels, row, col, ""),
+                    fontsize=settings["axis_labels_fs"],
+                )
+
+            ax.ticklabel_format(
+                axis="y",
+                style=settings.get("ticklabel_format", "scientific"),
+                scilimits=(0, 0),
             )
 
-        # start of a new row
-        if settings.get("y_labels", False) == "left_col" and i % len(cols) == 0:
-            ax.set_ylabel(y_labels.get(row, ""), fontsize=settings["axis_labels_fs"])
-        elif settings.get("y_labels", False) == "every_col":
-            ax.set_ylabel(
-                try_cell_row_col(y_labels, row, col, ""),
-                fontsize=settings["axis_labels_fs"],
-            )
+            # ticks
+            ax.tick_params(labelsize=settings["tick_fs"])
+            if try_cell_row_col(ticks, row, col, None) is not None:
+                x_ticks, y_ticks = try_cell_row_col(ticks, row, col, None)
 
-        # in the bottom row
-        if (
-            settings.get("x_labels", False) == "bottom_row"
-            and len(cols) * (len(rows) - 1) <= i
-        ):
-            ax.set_xlabel(x_labels.get(col, ""), fontsize=settings["axis_labels_fs"])
-        elif settings.get("x_labels", False) == "every_row":
-            ax.set_xlabel(
-                try_cell_row_col(x_labels, row, col, ""),
-                fontsize=settings["axis_labels_fs"],
-            )
+                if x_ticks is not None and len(x_ticks) > 0:
+                    ax.set_xticks(x_ticks)
 
-        ax.ticklabel_format(
-            axis="y",
-            style=settings.get("ticklabel_format", "scientific"),
-            scilimits=(0, 0),
-        )
+                if y_ticks is not None and len(y_ticks) > 0:
+                    ax.set_yticks(y_ticks)
 
-        # ticks
-        ax.tick_params(labelsize=settings["tick_fs"])
-        if try_cell_row_col(ticks, row, col, None) is not None:
-            x_ticks, y_ticks = try_cell_row_col(ticks, row, col, None)
+            # plot the cell
+            local_line_kwargs = line_kwargs
+            lines = results[row][col]
+            if line_kwargs is None:
+                local_line_kwargs = get_default_line_kwargs(lines)
 
-            if x_ticks is not None and len(x_ticks) > 0:
-                ax.xticks(x_ticks)
+            plot_fn(ax, lines, local_line_kwargs, settings)
 
-            if y_ticks is not None and len(y_ticks) > 0:
-                ax.yticks(y_ticks)
+            # log-scale:
+            if try_cell_row_col(log_scale, row, col, None) is not None:
+                log_type = try_cell_row_col(log_scale, row, col, None)
+                if log_type == "log-linear":
+                    ax.set_yscale("log")
+                elif log_type == "log-log":
+                    ax.set_yscale("log")
+                    ax.set_xscale("log")
+                elif log_type == "linear-log":
+                    ax.set_xscale("log")
 
-        # plot the cell
-        local_line_kwargs = line_kwargs
-        lines = results[row][col]
-        if line_kwargs is None:
-            local_line_kwargs = get_default_line_kwargs(lines)
+            # limits: needs to be done after plotting the data
+            if try_cell_row_col(limits, row, col, None) is not None:
+                x_limits, y_limits = try_cell_row_col(limits, row, col, None)
 
-        plot_fn(ax, lines, local_line_kwargs, settings)
+                if x_limits is not None and len(x_limits) > 0:
+                    ax.set_xlim(*x_limits)
 
-        # log-scale:
-        if try_cell_row_col(log_scale, row, col, None) is not None:
-            log_type = try_cell_row_col(log_scale, row, col, None)
-            if log_type == "log-linear":
-                ax.set_yscale("log")
-            elif log_type == "log-log":
-                ax.set_yscale("log")
-                ax.set_xscale("log")
-            elif log_type == "linear-log":
-                ax.set_xscale("log")
-
-        # limits: needs to be done after plotting the data
-        if try_cell_row_col(limits, row, col, None) is not None:
-            x_limits, y_limits = try_cell_row_col(limits, row, col, None)
-
-            if x_limits is not None and len(x_limits) > 0:
-                ax.set_xlim(*x_limits)
-
-            if y_limits is not None and len(y_limits) > 0:
-                ax.set_ylim(*y_limits)
+                if y_limits is not None and len(y_limits) > 0:
+                    ax.set_ylim(*y_limits)
+            i += 1
 
     # Put only one shared legend to avoid clutter
     handles, labels = ax.get_legend_handles_labels()
