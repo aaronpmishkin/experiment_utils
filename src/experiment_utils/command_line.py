@@ -140,8 +140,9 @@ def add_experiment_arguments(
     parser.add_argument(
         "--shuffle",
         dest="shuffle",
-        action="store_true",
-        help="Whether or not to shuffle the experiment order before running.",
+        type=int,
+        default=None,
+        help="Seed to use when shuffling the experiment order before running. Defaults to no shuffling.",
     )
 
     return parser
@@ -251,7 +252,7 @@ def get_experiment_arguments(
         int,
         int,
         str,
-        bool,
+        int,
     ],
     Namespace,
     list,
@@ -326,7 +327,7 @@ def unpack_experiment_defaults(
     int,
     int,
     str,
-    bool,
+    int,
 ]:
     return (
         arguments.exp_id,

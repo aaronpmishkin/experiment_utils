@@ -86,8 +86,8 @@ def build_job_string(
     if timed:
         job_string = job_string + " -T"
 
-    if shuffle:
-        job_string = job_string + " --shuffle"
+    if shuffle is not None:
+        job_string = job_string + " --shuffle {shuffle}"
 
     return job_string
 
@@ -127,8 +127,8 @@ if __name__ == "__main__":
     # )
 
     # avoid clustering hard experiments during array jobs!
-    if shuffle:
-        rng = np.random.default_rng(seed=123)
+    if shuffle is not None:
+        rng = np.random.default_rng(seed=shuffle)
         rng.shuffle(experiment_list)
 
     if nodes is not None:
