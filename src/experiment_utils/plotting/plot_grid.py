@@ -254,6 +254,7 @@ def update_grid(
     plt_lines: dict[Any, plt.Line2D],
     update_plot_fn: Callable,
     results: dict,
+    kwargs: dict = {},
 ):
     rows = list(results.keys())
     cols = list(results[rows[0]].keys())
@@ -264,5 +265,5 @@ def update_grid(
 
         # plot the cell
         lines = results[row][col]
-        artists = artists + update_plot_fn(ax, lines, plt_lines[(row, col)])
+        artists = artists + update_plot_fn(ax, lines, plt_lines[(row, col)], **kwargs)
     return artists
