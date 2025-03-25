@@ -284,6 +284,19 @@ def drop_start(start: int, filter_func: Callable):
     return closure
 
 
+def drop_spikes(filter_func: Callable):
+    def closure(vals: list | np.ndarray, key: tuple[Any]) -> list | np.ndarray:
+        if filter_func(key):
+            vals = np.array(vals)
+            indices = np.arange(len(vals) - 1)
+            indices = indices[vals[1:] > 100 * vals[0:-1]]
+            vals[indices + 1] = vals[indices]
+
+        return vals
+
+    return closure
+
+
 def extend(length: int, filter_func: Callable):
     def closure(vals: list | np.ndarray, key: tuple[Any]) -> list | np.ndarray:
         if filter_func(key) and len(vals) < length:
