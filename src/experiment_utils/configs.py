@@ -254,7 +254,7 @@ def make_grid(
         )
 
         # do *not* silently overwrite other experiments.
-        if optimize_val in grid[row_val][col_key][line_val][repeat_val]:
+        if optimize_val in grid[row_val][col_val][line_val][repeat_val]:
             raise ValueError(
                 (
                     f"Two experiment dicts match the same key-set: \n"
