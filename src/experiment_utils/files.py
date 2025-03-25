@@ -18,6 +18,7 @@ from . import configs, utils
 
 DIVERGENCE_FACTOR = 100
 
+
 def save_experiment(
     exp_dict: dict,
     results_dir: str = "results",
@@ -281,7 +282,6 @@ def load_metric_grid(
 
                             raise e
 
-
                         vals = utils.as_list(metrics[metric_name])
                         vals = np.nan_to_num(vals, nan=0)
 
@@ -540,3 +540,127 @@ def load_and_clean_experiments(
             val.pop(x_key)
 
     return metric_grid
+
+
+def load_parameterized_experiments(
+    exp_configs: list[dict[str, Any]],
+    results_dir: str | list[str],
+    metrics: list[str],
+    row_key: Any | Iterator[Any],
+    line_key: Any | Iterator[Any],
+    repeat_key: Any | Iterator[Any],
+    variation_key: Any | Iterator[Any],
+    metric_fn: Callable = utils.final_metrics,
+    target_metric: str | None = None,
+    maximize_target: bool = False,
+    keep: list[tuple[Any, Any]] = [],
+    remove: list[tuple[Any, Any]] = [],
+    filter_fn: Callable | None = None,
+    transform_fn: Callable | None = None,
+    processing_fns: list[
+        Callable[[dict[str, np.ndarray], tuple], dict[str, np.ndarray]]
+    ] = [],
+    x_key: str | None = None,
+    x_vals: list | np.ndarray | None = None,
+    silent_fail: bool = False,
+):
+    """Load and clean a grid of experiments for plotting.
+
+    This is a convenience function which composes other built-ins into one
+    block.
+
+    Params:
+        exp_configs: list of experiment configuration objects.
+        results_dir: a base directory or list of base directories where the
+            results are stored.
+        metrics: list of strings identifying different metrics to load.
+        row_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different rows.
+        line_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different lines.
+        repeat_key: key (or iterable of keys) for which distinct values in
+            the experiment dictionaries are to be *averaged* over in the plot.
+        metric_fn: (optional) function to process metrics after they are
+            loaded.
+        keep: A list of key-value pairs to retain with the form
+            `[(key, values)]`. Each `key` is either a singleton key for the
+            top-level dictionary or an iterable of keys indexing into nested
+            dictionaries, while `values` is either singleton or list of values.
+        remove: A list of key-value pairs to filter with the form
+            `[(key, values)]`. Arguments should take the same form as `keep`.
+        filter_fn: An additional filter to run on each dictionary. It should
+            return `True` for experiments to retain and `False` otherwise.
+        transform_fn: a function to call on the complete metric grid.
+        processing_fns: a list of functions to be called on the leaves of the
+            loaded experiment grid. Order matters.
+        x_key: a key which indexes into the values which should be used as the
+            x-axis.
+        x_vals: x-axis values. Cannot be supplied at the same time as 'x_key'.
+        silent_fail: suppress exceptions when some experiments can't be loaded.
+
+    Returns:
+        Nested dictionary containing loaded and cleaned experiment results.
+    """
+
+    exp_list = configs.expand_config_list(exp_configs)
+    if len(exp_list) == 0:
+        exp_list = exp_configs
+
+    filtered_exp_list = configs.filter_dict_list(
+        exp_list,
+        keep=keep,
+        remove=remove,
+        filter_fn=filter_fn,
+    )
+
+    # make sure we load the metric associated with the x-axis.
+    added_x = False
+
+    if x_key is not None and x_key not in metrics:
+        added_x = True
+        metrics = metrics + [x_key]
+
+    exp_grid = configs.make_metric_grid(
+        filtered_exp_list,
+        metrics,
+        row_key,
+        line_key,
+        repeat_key,
+        variation_key,
+    )
+
+    def call_on_fn(exp, key):
+        for fn in processing_fns:
+            exp = fn(exp, key)
+        return exp
+
+    metric_grid = load_metric_grid(
+        exp_grid,
+        results_dir,
+        processing_fn=call_on_fn,
+        silent_fail=silent_fail,
+    )
+
+    parameterized_grid = configs.leaves_to_roots(metric_grid)
+
+    for variation in parameterized_grid.keys():
+        subgrid = parameterized_grid[variation]
+        if transform_fn is not None:
+            subgrid = transform_fn(subgrid)
+
+        subgrid = compute_metrics(
+            subgrid,
+            metric_fn=metric_fn,
+            x_key=x_key,
+            x_vals=x_vals,
+        )
+
+        # drop x if necessary
+        if added_x:
+            for _, val in subgrid.items():
+                # remove x_key
+                val.pop(x_key)
+
+        parameterized_grid[variation] = subgrid
+
+    return parameterized_grid

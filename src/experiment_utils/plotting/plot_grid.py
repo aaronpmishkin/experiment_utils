@@ -277,5 +277,7 @@ def update_grid(
 
             # plot the cell
             lines = results[row][col]
-            artists = artists + update_plot_fn(ax, lines, plt_lines[(row, col)], **kwargs)
+            artists = artists + update_plot_fn(
+                ax, lines, plt_lines[(row, col)], **kwargs
+            )
     return artists

@@ -389,3 +389,20 @@ def call_on_grid(exp_grid: dict, call_fn: Callable) -> dict:
                     )
 
     return new_grid
+
+
+def leaves_to_roots(exp_grid: dict) -> dict:
+    new_grid: dict = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    )
+
+    for row in exp_grid.keys():
+        for col in exp_grid[row].keys():
+            for line in exp_grid[row][col].keys():
+                for repeat in exp_grid[row][col][line].keys():
+                    for variation in exp_grid[row][col][line][repeat].keys():
+                        subdict = new_grid[variation][row][col][line]
+                        val = exp_grid[row][col][line][repeat][variation]
+                        subdict[repeat] = val
+
+    return new_grid
