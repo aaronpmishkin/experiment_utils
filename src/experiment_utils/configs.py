@@ -252,13 +252,12 @@ def make_grid(
             if callable(variation_key)
             else get_nested_value(exp_dict, variation_key)
         )
-
         # do *not* silently overwrite other experiments.
         if optimize_val in grid[row_val][col_val][line_val][repeat_val]:
             raise ValueError(
                 (
                     f"Two experiment dicts match the same key-set: \n"
-                    f"{grid[row_val][col_key][line_val][repeat_val][optimize_val]}, \n\n"
+                    f"{grid[row_val][col_val][line_val][repeat_val][optimize_val]}, \n\n"
                     f"{exp_dict}."
                 )
             )
@@ -367,7 +366,6 @@ def merge_grids(exp_grids: list[dict]) -> dict:
                             )
                         )
                     base_grid[row][col][line] = grid[row][col][line]
-
     return base_grid
 
 

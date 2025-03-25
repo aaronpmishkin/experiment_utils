@@ -48,6 +48,7 @@ def plot_grid(
     log_scale: dict = {},
     settings: dict = DEFAULT_SETTINGS,
     base_dir: str | None = None,
+    close: bool = True,
 ):
     """Generate a `len(rows)` x `len(cols)` grid of plots.
 
@@ -78,6 +79,7 @@ def plot_grid(
             See `defaults.DEFAULT_SETTINGS` above.
         base_dir: location to save plot. Defaults to 'None', in which case
             the plot is not saved.
+        close: whether or not to close the figure after plotting.
 
     Returns:
         Figure and dictionary of axis objects indexed by the rows and columns.
@@ -110,6 +112,7 @@ def plot_grid(
         figure_labels.get("row_titles", {}),
     )
     axes = {}
+    plt_lines = {}
     i = 0
     for row in rows:
         for col in results[row].keys():
@@ -202,11 +205,14 @@ def plot_grid(
             if try_cell_row_col(limits, row, col, None) is not None:
                 x_limits, y_limits = try_cell_row_col(limits, row, col, None)
 
-                if x_limits is not None and len(x_limits) > 0:
-                    ax.set_xlim(*x_limits)
+            plt_lines[(row, col)] = plot_fn(ax, lines, local_line_kwargs, settings)
 
-                if y_limits is not None and len(y_limits) > 0:
-                    ax.set_ylim(*y_limits)
+            if x_limits is not None and len(x_limits) > 0:
+                ax.set_xlim(*x_limits)
+
+            if y_limits is not None and len(y_limits) > 0:
+                ax.set_ylim(*y_limits)
+
             i += 1
 
     # Put only one shared legend to avoid clutter
@@ -248,6 +254,28 @@ def plot_grid(
         os.makedirs(head, exist_ok=True)
         plt.savefig(base_dir)
 
-    plt.close()
+    if close:
+        plt.close()
 
-    return fig, axes
+    return fig, axes, plt_lines
+
+
+def update_grid(
+    fig: plt.Figure,
+    axes: dict[Any, plt.Axes],
+    plt_lines: dict[Any, plt.Line2D],
+    update_plot_fn: Callable,
+    results: dict,
+    kwargs: dict = {},
+):
+    rows = list(results.keys())
+    artists = []
+
+    for row in rows:
+        for col in results[row].keys():
+            ax = axes[(row, col)]
+
+            # plot the cell
+            lines = results[row][col]
+            artists = artists + update_plot_fn(ax, lines, plt_lines[(row, col)], **kwargs)
+    return artists

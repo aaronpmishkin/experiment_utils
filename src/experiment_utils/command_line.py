@@ -89,7 +89,14 @@ def add_experiment_arguments(
         "--verbose",
         action="store_true",
         dest="verbose",
-        help="Print logging information verbosely.",
+        help="Print experiment information verbosely.",
+    )
+    parser.add_argument(
+        "-VV",
+        "--verbose_all",
+        action="store_true",
+        dest="verbose_all",
+        help="Print all logging information verbosely.",
     )
     # log-file
     parser.add_argument(
@@ -140,6 +147,7 @@ def add_experiment_arguments(
     parser.add_argument(
         "--shuffle",
         dest="shuffle",
+        action="store",
         type=int,
         default=None,
         help="Seed to use when shuffling the experiment order before running. Defaults to no shuffling.",
@@ -247,6 +255,7 @@ def get_experiment_arguments(
         bool,
         bool,
         bool,
+        bool,
         str,
         bool,
         int,
@@ -322,6 +331,7 @@ def unpack_experiment_defaults(
     bool,
     bool,
     bool,
+    bool,
     str,
     bool,
     int,
@@ -336,6 +346,7 @@ def unpack_experiment_defaults(
         arguments.force_rerun,
         arguments.save_results,
         arguments.verbose,
+        arguments.verbose_all,
         arguments.debug,
         arguments.log_file,
         arguments.timed,
