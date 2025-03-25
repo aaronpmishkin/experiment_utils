@@ -66,7 +66,7 @@ line_styles = [
     "dotted",
 ]
 # default marker styles.
-marker_styles = ["o", "s", "v", "x", "D", "^", "D", "p", "o", "x", "s"]
+marker_styles = ["o", "s", "v", "X", "D", "^", "D", "p", "o", "x", "s"]
 
 
 def get_default_line_kwargs(lines):

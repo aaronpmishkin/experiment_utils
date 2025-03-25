@@ -16,6 +16,7 @@ import numpy as np
 
 from . import configs, utils
 
+DIVERGENCE_FACTOR = 100
 
 def save_experiment(
     exp_dict: dict,
@@ -280,7 +281,9 @@ def load_metric_grid(
 
                             raise e
 
+
                         vals = utils.as_list(metrics[metric_name])
+                        vals = np.nan_to_num(vals, nan=0)
 
                         results_grid[row][metric_name][line][repeat][variation] = (
                             processing_fn(
@@ -320,12 +323,34 @@ def optimize_over_variations(
                             target_vals,
                             nan=replace_val,
                         )
+                        # filter out diverging variations leading to overflows.
+                        for i, var in enumerate(variations):
+                            max_val = np.max(
+                                metric_grid[row][target_metric][line][repeat][var]
+                            )
+                            init_val = metric_grid[row][target_metric][line][repeat][
+                                var
+                            ][0]
+                            if maximize_target:
+                                if np.isnan(max_val):
+                                    max_val = -np.inf
 
-                        index = (
-                            np.argmax(target_vals)
-                            if maximize_target
-                            else np.argmin(target_vals)
-                        )
+                                if max_val < init_val / DIVERGENCE_FACTOR:
+                                    target_vals[i] = -np.inf
+                            else:
+                                if np.isnan(max_val):
+                                    max_val = np.inf
+
+                                if max_val > init_val * DIVERGENCE_FACTOR:
+                                    target_vals[i] = np.inf
+
+                        if maximize_target:
+                            target_vals = np.nan_to_num(target_vals, nan=-np.inf)
+                            index = np.argmax(target_vals)
+                        else:
+                            target_vals = np.nan_to_num(target_vals, nan=np.inf)
+                            index = np.argmin(target_vals)
+
                         best_variation = variations[index]
 
                     optimized_grid[row][metric_name][line][repeat] = metric_grid[row][

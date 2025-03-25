@@ -82,7 +82,7 @@ def quantile_metrics(
             value = 0.0
         metrics_np = equalize_arrays(metrics, value=value)
 
-        if metric_name == "time":
+        if metric_name == "time" or metric_name == "tele_time":
             metrics_np = np.cumsum(metrics_np, axis=-1)
 
     elif isinstance(metrics, np.ndarray):
@@ -262,6 +262,26 @@ def pad(array: list | np.ndarray, length: int, value=None) -> np.ndarray:
         value = array_np[-1]
 
     return np.concatenate([array_np, np.repeat([value], length - len(array_np))])
+
+
+def cumulative_min(filter_func: Callable):
+    def closure(vals: list | np.ndarray, key: tuple[Any]) -> list | np.ndarray:
+        if filter_func(key) and not np.any(vals == 0.0):
+            vals = np.minimum.accumulate(vals)
+
+        return vals
+
+    return closure
+
+
+def subtract_min(filter_func: Callable, min_value: Callable):
+    def closure(vals: list | np.ndarray, key: tuple[Any]) -> list | np.ndarray:
+        if filter_func(key):
+            vals = vals - min_value(key)
+
+        return vals
+
+    return closure
 
 
 def normalize(filter_func: Callable):
