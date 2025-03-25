@@ -25,7 +25,10 @@ dependencies = [
 ]
 
 [tool.setuptools.package-data]
-scnn = ["py.typed"]
+experiment_utils = ["py.typed"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
 
 [project.urls]
 "Homepage" = "https://github.com/aaronpmishkin/experiment_utils"
