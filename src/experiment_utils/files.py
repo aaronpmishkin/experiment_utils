@@ -318,11 +318,6 @@ def optimize_over_variations(
                             metric_grid[row][target_metric][line][repeat][var][-1]
                             for var in variations
                         ]
-                        replace_val = -np.inf if maximize_target else np.inf
-                        target_vals = np.nan_to_num(
-                            target_vals,
-                            nan=replace_val,
-                        )
                         # filter out diverging variations leading to overflows.
                         for i, var in enumerate(variations):
                             max_val = np.max(

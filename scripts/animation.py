@@ -16,6 +16,9 @@ from experiment_utils.plotting import plot_grid, plot_cell, defaults
 from exp_configs import EXPERIMENTS
 from plot_configs import PLOTS
 
+
+INTERVAL_LENGTH = 25
+
 # Script #
 
 if __name__ == "__main__":
@@ -105,7 +108,7 @@ if __name__ == "__main__":
                 fig=fig,
                 func=update,
                 frames=len(variation_map),
-                interval=25,
+                interval=INTERVAL_LENGTH,
             )
             plt.show()
 

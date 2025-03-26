@@ -200,7 +200,8 @@ def make_grid(
     """Convert an experiment list of into grid of experiment dictionaries.
 
     The grid of experiment dictionaries is organized in a hierarchy as
-    rows -> columns -> lines -> repeats in preparation for plotting.
+    rows -> columns -> lines -> repeats -> variations in preparation for plotting.
+    Typically variations are optimizes over automatically.
 
     Params:
         exp_list: list of experiment dictionaries.
@@ -232,15 +233,15 @@ def make_grid(
             if callable(row_key)
             else get_nested_value(exp_dict, row_key)
         )
-        line_val = (
-            line_key(exp_dict)
-            if callable(line_key)
-            else get_nested_value(exp_dict, line_key)
-        )
         col_val = (
             col_key(exp_dict)
             if callable(col_key)
             else get_nested_value(exp_dict, col_key)
+        )
+        line_val = (
+            line_key(exp_dict)
+            if callable(line_key)
+            else get_nested_value(exp_dict, line_key)
         )
         repeat_val = (
             repeat_key(exp_dict)
@@ -256,7 +257,7 @@ def make_grid(
         if optimize_val in grid[row_val][col_val][line_val][repeat_val]:
             raise ValueError(
                 (
-                    f"Two experiment dicts match the same key-set: \n"
+                    f"Two experiment dicts match the same key-set: {row_val, col_val, line_val, repeat_val, optimize_val}\n"
                     f"{grid[row_val][col_val][line_val][repeat_val][optimize_val]}, \n\n"
                     f"{exp_dict}."
                 )
@@ -331,13 +332,84 @@ def make_metric_grid(
         if optimize_val in grid[row_val][metric_name][line_val][repeat_val]:
             raise ValueError(
                 (
-                    f"Two experiment dicts match the same key-set: \n"
+                    f"Two experiment dicts match the same key-set: {row_val, metric_name, line_val, repeat_val, optimize_val}\n"
                     f"{grid[row_val][metric_name][line_val][repeat_val][optimize_val]}, \n\n"
                     f"{exp_dict}."
                 )
             )
 
         grid[row_val][metric_name][line_val][repeat_val][optimize_val] = exp_dict
+
+    return grid
+
+
+def make_performance_profile_grid(
+    exp_list: list[dict],
+    row_key: Any | Iterator[Any],
+    col_key: Any | Iterator[Any],
+    problem_key: Any | Iterator[Any],
+    line_key: Any | Iterator[Any],
+) -> dict:
+    """Convert an experiment list of into 3d grid of experiment dictionaries.
+
+    The grid of experiment dictionaries is organized in a hierarchy as
+    rows -> columns -> lines in preparation for plotting.
+
+    Params:
+        exp_list: list of experiment dictionaries.
+        row_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different rows.
+        col_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different columns.
+        problem_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different lines.
+        line_key: key (or iterable of keys) for which distinct values in the
+            experiment dictionaries are to be split into different lines.
+
+    Returns:
+        A nested dictionary whose first level is indexed by the unique values
+        found at `row_key`, the second by the values at `col_key`, the
+        third by values at `problem_key`, and the fourth by the values at
+        `line_key`.
+
+    """
+    grid: dict = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    )
+
+    for exp_dict in exp_list:
+        row_val = (
+            row_key(exp_dict)
+            if callable(row_key)
+            else get_nested_value(exp_dict, row_key)
+        )
+        col_val = (
+            col_key(exp_dict)
+            if callable(col_key)
+            else get_nested_value(exp_dict, col_key)
+        )
+        problem_val = (
+            problem_key(exp_dict)
+            if callable(problem_key)
+            else get_nested_value(exp_dict, problem_key)
+        )
+        line_val = (
+            line_key(exp_dict)
+            if callable(line_key)
+            else get_nested_value(exp_dict, line_key)
+        )
+        # do *not* silently overwrite other experiments.
+
+        if line_val in grid[row_val][col_val][problem_val]:
+            raise ValueError(
+                (
+                    f"Two experiment dicts match the same key-set: {row_val, col_val, problem_val, line_val} \n"
+                    f"{grid[row_val][col_val][problem_val][line_val]}, \n\n"
+                    f"{exp_dict}."
+                )
+            )
+
+        grid[row_val][col_val][problem_val][line_val] = exp_dict
 
     return grid
 
@@ -360,7 +432,7 @@ def merge_grids(exp_grids: list[dict]) -> dict:
                     if line in base_grid[row][col][line]:
                         raise ValueError(
                             (
-                                f"Two experiment dicts match the same key-set:"
+                                f"Two experiment dicts match the same key-set: {row, col, line}"
                                 f"\n {grid[row][col][line]}, \n \n"
                                 f"{base_grid[row][col][line]}."
                             )
